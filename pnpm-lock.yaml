@@ -5,12 +5,14 @@ specifiers:
   '@astrojs/rss': ^2.1.1
   '@astrojs/sitemap': ^1.0.1
   astro: ^2.0.14
+  typed.js: ^2.0.132
 
 dependencies:
   '@astrojs/mdx': 0.17.0_astro@2.0.14
   '@astrojs/rss': 2.1.1
   '@astrojs/sitemap': 1.0.1
   astro: 2.0.14
+  typed.js: 2.0.132
 
 packages:
 
@@ -3119,6 +3121,10 @@ packages:
   /type-fest/2.19.0:
     resolution: {integrity: sha512-RAH822pAdBgcNMAfWnCBU3CFZcfZ/i1eZjwFU/dsLKumyuuP3niueg2UAukXYF0E2AAoc82ZSSf9J0WQBinzHA==}
     engines: {node: '>=12.20'}
+    dev: false
+
+  /typed.js/2.0.132:
+    resolution: {integrity: sha512-6lWs7dqLtfvZZtNLUJte5RYkT0rj2ACOwkeWghxSnyChSu/ZHX2NlT1KHc2daqVx3073wLIJYlCL2aHcjWYCAQ==}
     dev: false
 
   /typescript/4.9.5:

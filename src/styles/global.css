@@ -1,79 +1,96 @@
-/*
-  The CSS in this style tag is based off of Bear Blog's default CSS.
-  https://github.com/HermanMartinus/bearblog/blob/297026a877bc2ab2b3bdfbd6b9f7961c350917dd/templates/styles/blog/default.css
-  License MIT: https://github.com/HermanMartinus/bearblog/blob/master/LICENSE.md
- */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+	font-family: "Poppins", sans-serif;
+
+	--backgroudColor: #1f242d;
+}
+
 body {
-	font-family: Verdana, sans-serif;
-	margin: auto;
-	padding: 20px;
-	max-width: 65ch;
-	text-align: left;
-	background-color: #fff;
-	word-wrap: break-word;
-	overflow-wrap: break-word;
-	line-height: 1.5;
-	color: #444;
+	background: var(--backgroudColor);
+	color: #fff;
+	padding-top: 78px;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-strong,
-b {
-	color: #222;
+main {
+	min-height: calc(100vh - 78px - 75px);
 }
 
-a {
-	color: #3273dc;
+.flex-center{
+	display: flex;
+	justify-content: center;
+	align-items: center;
 }
 
-nav a {
-	margin-right: 10px;
+
+@keyframes slideRight {
+	0% {
+		transform: translateX(-100px);
+	}
+
+	100% {
+		transform: translateX(0);
+		opacity: 1;
+	}
 }
 
-textarea {
-	width: 100%;
-	font-size: 16px;
+@keyframes slideLeft {
+	0% {
+		transform: translateX(100px);
+	}
+
+	100% {
+		transform: translateX(0);
+		opacity: 1;
+	}
 }
 
-input {
-	font-size: 16px;
+@keyframes slideTop {
+	0% {
+		transform: translateY(100px);
+	}
+
+	100% {
+		transform: translateY(0);
+		opacity: 1;
+	}
 }
 
-content {
-	line-height: 1.6;
+@keyframes slideBottom {
+	0% {
+		transform: translateY(-100px);
+	}
+
+	100% {
+		transform: translateY(0);
+		opacity: 1;
+	}
 }
 
-table {
-	width: 100%;
+@keyframes zoomIn {
+	0% {
+		transform: scale(0);
+	}
+
+	100% {
+		transform: scale(1);
+		opacity: 1;
+	}
 }
 
-img {
-	max-width: 100%;
-	height: auto;
-}
+@keyframes floatImage {
+	0% {
+		transform: translateY(0);
+	}
 
-code {
-	padding: 2px 5px;
-	background-color: #f2f2f2;
-}
+	50% {
+		transform: translateY(-24px);
+	}
 
-pre {
-	padding: 1rem;
-}
-
-pre>code {
-	all: unset;
-}
-
-blockquote {
-	border: 1px solid #999;
-	color: #222;
-	padding: 2px 0px 2px 20px;
-	margin: 0px;
-	font-style: italic;
+	100% {
+		transform: translateY(0);
+	}
 }

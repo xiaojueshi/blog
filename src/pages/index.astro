@@ -9,12 +9,170 @@ import { SITE_TITLE, SITE_DESCRIPTION } from "../consts";
 <html lang="zh_CN">
 	<head>
 		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+		<link
+			href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
+			rel="stylesheet"
+		/>
+		<script src="https://unpkg.com/typed.js@2.0.132/dist/typed.umd.js"></script>
 	</head>
 	<body>
 		<Header title={SITE_TITLE} />
-		<main>
-			<h1>🚧</h1>
-			<p>Sorry, the front page is under construction...</p>
+		<main class="flex-center">
+			<section class="home">
+				<div class="home-content">
+					<h3>Hello,It's Me</h3>
+					<h1>Xiao Jue Shi</h1>
+					<h3>And I'm a <span class="multiple-text"></span></h3>
+					<p>
+						I have always believed in what Lei Jun said: "Always believe that
+						good things are about to happen!"
+					</p>
+					<div class="social-media">
+						<a href="https://github.com/xiaojueshi" style="--i: 7"
+							><i class="bx bxl-github"></i></a
+						>
+					</div>
+					<a href="/blog" class="btn">Let's go Blogs</a>
+				</div>
+				<div class="home-img flex-center">
+					<img src="/favicon.png" alt="" />
+				</div>
+			</section>
+
+			<!-- <script
+				is:inline
+				src="https://unpkg.com/typed.js@2.0.132/dist/typed.umd.js"
+			></script> -->
+
+			<script>
+				import Typed from "typed.js";
+
+				const typed = new Typed(".multiple-text", {
+					strings: ["Frontend Developer", "Rookie Apprentice"],
+					typeSpeed: 100,
+					backSpeed: 100,
+					backDelay: 1000,
+					loop: true,
+				});
+			</script>
+
+			<style>
+				.home {
+					width: 100%;
+					display: flex;
+					justify-content: space-evenly;
+					align-items: center;
+					flex-wrap: wrap;
+				}
+
+				.home-content {
+					max-width: 600px;
+				}
+
+				.home-content h3 {
+					font-size: 32px;
+					font-weight: 700;
+					opacity: 0;
+					animation: slideBottom 1s ease forwards;
+					animation-delay: 0.7s;
+				}
+
+				.home-content h3:nth-of-type(2) {
+					margin-bottom: 30px;
+					opacity: 0;
+					animation: slideTop 1s ease forwards;
+					animation-delay: 0.7s;
+				}
+
+				.home-content h3 span {
+					color: #b7b2a9;
+				}
+
+				.home-content h1 {
+					font-size: 56px;
+					font-weight: 700;
+					margin: -3px 0;
+					opacity: 0;
+					animation: slideRight 1s ease forwards;
+					animation-delay: 1s;
+				}
+
+				.home-content p {
+					font-size: 16px;
+					opacity: 0;
+					animation: slideLeft 1s ease forwards;
+					animation-delay: 0.7s;
+				}
+
+				.home-img {
+					width: 450px;
+					height: 450px;
+					background-color: #b7b2a9;
+					opacity: 0;
+					animation: zoomIn 1s ease forwards, floatImage 4s ease-in-out infinite;
+					animation-delay: 2s, 3s;
+					box-shadow: 0 0 20px #b7b2a9;
+					border-radius: 50%;
+				}
+
+				.home-img img {
+					width: 75%;
+					height: 70%;
+					margin-bottom: 70px;
+				}
+
+				.social-media a {
+					display: inline-flex;
+					justify-content: center;
+					align-items: center;
+					width: 40px;
+					height: 40px;
+					background: transparent;
+					border: 2px solid #b7b2a9;
+					border-radius: 50%;
+					color: #b7b2a9;
+					font-size: 20px;
+					text-decoration: none;
+					margin: 30px 15px 30px 0;
+					transition: 0.5s ease;
+					opacity: 0;
+					animation: slideLeft 1s ease forwards;
+					animation-delay: calc(0.2s * var(--i));
+				}
+
+				.social-media a:hover {
+					background: #b7b2a9;
+					color: #1f242d;
+					box-shadow: 0 0 20px #b7b2a9;
+				}
+
+				.btn {
+					display: inline-block;
+					padding: 12px 28px;
+					background: #b7b2a9;
+					text-decoration: none;
+					border-radius: 40px;
+					box-shadow: 0 0 10px #b7b2a9;
+					font-size: 16px;
+					color: #1f242d;
+					letter-spacing: 1px;
+					font-weight: 600;
+					transition: 0.5s ease;
+					opacity: 0;
+					animation: slideTop 1s ease forwards;
+					animation-delay: 2s;
+				}
+
+				.btn:hover {
+					box-shadow: 0 0 20px #b7b2a9;
+				}
+
+				.btn:active {
+					background: none;
+					color: #b7b2a9;
+					border: 2px solid #b7b2a9;
+				}
+			</style>
 		</main>
 		<Footer />
 	</body>
