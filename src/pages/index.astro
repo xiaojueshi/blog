@@ -1,50 +1,415 @@
 ---
-import BaseHead from '../components/BaseHead.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
-import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+import BaseHead from "../components/BaseHead.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import { SITE_TITLE, SITE_DESCRIPTION } from "../consts";
+import { getCollection } from "astro:content";
+
+// 获取最新的3篇博客文章
+const posts = (await getCollection("blog"))
+	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+	.slice(0, 3);
+
+console.log(posts);
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 	<head>
 		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
 	</head>
 	<body>
 		<Header />
 		<main>
-			<h1>🧑‍🚀 Hello, Astronaut!</h1>
-			<p>
-				Welcome to the official <a href="https://astro.build/">Astro</a> blog starter template. This
-				template serves as a lightweight, minimally-styled starting point for anyone looking to build
-				a personal website, blog, or portfolio with Astro.
-			</p>
-			<p>
-				This template comes with a few integrations already configured in your
-				<code>astro.config.mjs</code> file. You can customize your setup with
-				<a href="https://astro.build/integrations">Astro Integrations</a> to add tools like Tailwind,
-				React, or Vue to your project.
-			</p>
-			<p>Here are a few ideas on how to get started with the template:</p>
-			<ul>
-				<li>Edit this page in <code>src/pages/index.astro</code></li>
-				<li>Edit the site header items in <code>src/components/Header.astro</code></li>
-				<li>Add your name to the footer in <code>src/components/Footer.astro</code></li>
-				<li>Check out the included blog posts in <code>src/content/blog/</code></li>
-				<li>Customize the blog post page layout in <code>src/layouts/BlogPost.astro</code></li>
-			</ul>
-			<p>
-				Have fun! If you get stuck, remember to <a href="https://docs.astro.build/"
-					>read the docs
-				</a> or <a href="https://astro.build/chat">join us on Discord</a> to ask questions.
-			</p>
-			<p>
-				Looking for a blog template with a bit more personality? Check out <a
-					href="https://github.com/Charca/astro-blog-template"
-					>astro-blog-template
-				</a> by <a href="https://twitter.com/Charca">Maxi Ferreira</a>.
-			</p>
+			<section class="hero">
+				<div class="container">
+					<h1>
+						<span class="code-style">&lt;</span>前端工程师<span
+							class="code-style">/&gt;</span
+						>
+					</h1>
+					<p class="subtitle">编写优雅代码，构建美好网络世界</p>
+					<div class="terminal">
+						<div class="terminal-header">
+							<span class="terminal-button"></span>
+							<span class="terminal-button"></span>
+							<span class="terminal-button"></span>
+							<div class="terminal-title">终端</div>
+						</div>
+						<div class="terminal-content">
+							<div class="line">
+								<span class="prompt">$</span>
+								<span class="command">cd 前端工程师的代码空间</span>
+							</div>
+							<div class="line">
+								<span class="prompt">$</span>
+								<span class="command">cat 个人简介.txt</span>
+							</div>
+							<div class="line output">
+								热爱前端技术，擅长JavaScript、CSS和现代框架
+							</div>
+							<div class="line output">不断探索最佳实践和创新的开发方式</div>
+							<div class="line">
+								<span class="prompt">$</span>
+								<span class="command">ls 技术栈/</span>
+							</div>
+							<div class="line output">
+								<span class="tech-tag">HTML5</span>
+								<span class="tech-tag">CSS3</span>
+								<span class="tech-tag">JavaScript</span>
+								<span class="tech-tag">TypeScript</span>
+								<span class="tech-tag">React</span>
+								<span class="tech-tag">Astro</span>
+							</div>
+							<div class="line">
+								<span class="prompt">$</span>
+								<span class="cursor"></span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="features">
+				<h2>博客特点</h2>
+				<div class="features-grid">
+					<div class="feature-card">
+						<div class="feature-icon">📝</div>
+						<h3>前端技术分享</h3>
+						<p>分享前端开发经验、最佳实践和解决方案</p>
+					</div>
+					<div class="feature-card">
+						<div class="feature-icon">🎨</div>
+						<h3>简洁大气</h3>
+						<p>遵循现代设计原则，清晰易读的用户界面</p>
+					</div>
+					<div class="feature-card">
+						<div class="feature-icon">🌓</div>
+						<h3>主题切换</h3>
+						<p>支持浅色/深色模式，满足不同阅读偏好</p>
+					</div>
+				</div>
+			</section>
+
+			<section class="latest-posts">
+				<h2>最新文章</h2>
+				<div class="posts-grid">
+					{
+						posts.map((post) => (
+							<a href={`/blog/${post.id}/`} class="post-card">
+								<div class="post-date">
+									{new Date(post.data.pubDate).toLocaleDateString("zh-CN", {
+										year: "numeric",
+										month: "short",
+										day: "numeric",
+									})}
+								</div>
+								<h3>{post.data.title}</h3>
+								<p>{post.data.description}</p>
+								<span class="read-more">阅读更多 →</span>
+							</a>
+						))
+					}
+				</div>
+				<div class="view-all">
+					<a href="/blog" class="view-all-link">查看所有文章 →</a>
+				</div>
+			</section>
 		</main>
 		<Footer />
 	</body>
 </html>
+
+<style>
+	/* 英雄区域样式 */
+	.hero {
+		padding: 4rem 0 2rem;
+		text-align: center;
+	}
+
+	.container {
+		max-width: 800px;
+		margin: 0 auto;
+	}
+
+	h1 {
+		font-size: 3rem;
+		font-weight: 800;
+		margin-bottom: 0.5rem;
+		line-height: 1.2;
+	}
+
+	.code-style {
+		color: var(--accent);
+		font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+	}
+
+	.subtitle {
+		font-size: 1.5rem;
+		color: rgb(var(--gray));
+		margin-bottom: 3rem;
+	}
+
+	/* 终端样式 */
+	.terminal {
+		background-color: rgb(var(--syntax-bg));
+		border-radius: 8px;
+		box-shadow: 0 10px 20px rgba(var(--black), 0.1);
+		max-width: 600px;
+		margin: 0 auto 3rem;
+		text-align: left;
+		overflow: hidden;
+		border: 1px solid rgb(var(--border));
+	}
+
+	.terminal-header {
+		background-color: rgb(var(--gray-light));
+		padding: 0.6rem 1rem;
+		display: flex;
+		align-items: center;
+		position: relative;
+	}
+
+	.terminal-button {
+		width: 12px;
+		height: 12px;
+		border-radius: 50%;
+		margin-right: 6px;
+		background-color: rgb(var(--gray));
+	}
+
+	.terminal-button:first-child {
+		background-color: #ff5f56;
+	}
+
+	.terminal-button:nth-child(2) {
+		background-color: #ffbd2e;
+	}
+
+	.terminal-button:nth-child(3) {
+		background-color: #27c93f;
+	}
+
+	.terminal-title {
+		position: absolute;
+		left: 0;
+		right: 0;
+		text-align: center;
+		color: rgb(var(--gray-dark));
+		font-size: 0.8rem;
+	}
+
+	.terminal-content {
+		padding: 1rem;
+		font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+		font-size: 0.9rem;
+		line-height: 1.5;
+		color: rgb(var(--syntax-txt));
+	}
+
+	.line {
+		margin-bottom: 0.5rem;
+		display: flex;
+	}
+
+	.prompt {
+		color: var(--accent);
+		margin-right: 0.5rem;
+	}
+
+	.command {
+		color: rgb(var(--syntax-name));
+	}
+
+	.output {
+		color: rgb(var(--syntax-val));
+		padding-left: 1.5rem;
+	}
+
+	.tech-tag {
+		display: inline-block;
+		background-color: rgba(var(--syntax-highlight), 0.5);
+		padding: 0.1rem 0.5rem;
+		border-radius: 4px;
+		margin-right: 0.5rem;
+		margin-bottom: 0.5rem;
+		color: rgb(var(--syntax-name));
+	}
+
+	.cursor {
+		display: inline-block;
+		width: 8px;
+		height: 1.2em;
+		background-color: rgb(var(--syntax-txt));
+		animation: blink 1s infinite;
+		vertical-align: middle;
+	}
+
+	@keyframes blink {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0;
+		}
+	}
+
+	/* 特性卡片样式 */
+	.features {
+		padding: 3rem 0;
+	}
+
+	h2 {
+		text-align: center;
+		margin-bottom: 2rem;
+		font-size: 2rem;
+		position: relative;
+		display: inline-block;
+		left: 50%;
+		transform: translateX(-50%);
+	}
+
+	h2::after {
+		content: "";
+		position: absolute;
+		bottom: -10px;
+		left: 0;
+		width: 60%;
+		height: 3px;
+		background-color: var(--accent);
+		left: 50%;
+		transform: translateX(-50%);
+	}
+
+	.features-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+		gap: 2rem;
+		margin-top: 2rem;
+	}
+
+	.feature-card {
+		background-color: rgb(var(--card-background));
+		border-radius: 8px;
+		padding: 1.5rem;
+		text-align: center;
+		box-shadow: var(--box-shadow);
+		transition:
+			transform 0.3s ease,
+			box-shadow 0.3s ease;
+		border: 1px solid rgb(var(--border));
+	}
+
+	.feature-card:hover {
+		transform: translateY(-5px);
+		box-shadow: 0 10px 25px rgba(var(--gray), 0.15);
+	}
+
+	.feature-icon {
+		font-size: 2.5rem;
+		margin-bottom: 1rem;
+	}
+
+	h3 {
+		font-size: 1.2rem;
+		margin-bottom: 0.5rem;
+	}
+
+	/* 最新文章样式 */
+	.latest-posts {
+		padding: 3rem 0;
+	}
+
+	.posts-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+		gap: 2rem;
+		margin-top: 2rem;
+	}
+
+	.post-card {
+		background-color: rgb(var(--card-background));
+		border-radius: 8px;
+		padding: 1.5rem;
+		display: block;
+		text-decoration: none;
+		color: rgb(var(--gray-dark));
+		box-shadow: var(--box-shadow);
+		transition:
+			transform 0.3s ease,
+			box-shadow 0.3s ease;
+		border: 1px solid rgb(var(--border));
+	}
+
+	.post-card:hover {
+		transform: translateY(-5px);
+		box-shadow: 0 10px 25px rgba(var(--gray), 0.15);
+	}
+
+	.post-card h3 {
+		margin: 0.5rem 0;
+		color: rgb(var(--black));
+	}
+
+	.post-date {
+		font-size: 0.8rem;
+		color: rgb(var(--gray));
+	}
+
+	.post-card p {
+		margin: 0.5rem 0 1rem;
+		font-size: 0.9rem;
+		color: rgb(var(--gray-dark));
+	}
+
+	.read-more {
+		color: var(--accent);
+		font-weight: 500;
+		font-size: 0.9rem;
+	}
+
+	.view-all {
+		text-align: center;
+		margin-top: 2rem;
+	}
+
+	.view-all-link {
+		display: inline-block;
+		background-color: transparent;
+		color: var(--accent);
+		padding: 0.5rem 1.5rem;
+		border-radius: 4px;
+		text-decoration: none;
+		font-weight: 500;
+		border: 1px solid var(--accent);
+		transition:
+			background-color 0.3s ease,
+			color 0.3s ease;
+	}
+
+	.view-all-link:hover {
+		background-color: var(--accent);
+		color: white;
+	}
+
+	/* 响应式样式 */
+	@media (max-width: 768px) {
+		h1 {
+			font-size: 2.5rem;
+		}
+
+		.subtitle {
+			font-size: 1.2rem;
+		}
+
+		.terminal {
+			max-width: 90%;
+		}
+
+		.features-grid,
+		.posts-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>
