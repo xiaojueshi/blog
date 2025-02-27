@@ -13,3 +13,40 @@ export const SOCIAL_MEDIA = [
     icon: 'fab fa-twitter',
   },
 ];
+
+export const TECHNOLOGY_STACK = [
+  {
+    name: 'React',
+    url: 'https://reactjs.org/',
+    icon: 'fab fa-react',
+  },
+  {
+    name: 'TypeScript',
+    url: 'https://www.typescriptlang.org/',
+    icon: 'fab fa-js',
+  },
+  {
+    name: 'Astro',
+    url: 'https://astro.build/',
+  },
+  {
+    name: 'HTML5',
+    url: 'https://developer.mozilla.org/en-US/docs/Web/HTML',
+  },
+  {
+    name: 'CSS3',
+    url: 'https://developer.mozilla.org/en-US/docs/Web/CSS',
+  },  
+  {
+    name: 'JavaScript',
+    url: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript',
+  },
+  {
+    name: 'Node.js',
+    url: 'https://nodejs.org/',
+  },
+  {
+    name: 'Express.js',
+    url: 'https://expressjs.com/',
+  }
+]

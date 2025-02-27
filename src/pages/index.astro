@@ -2,7 +2,7 @@
 import BaseHead from "../components/BaseHead.astro";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
-import { SITE_TITLE, SITE_DESCRIPTION } from "../config";
+import { SITE_TITLE, SITE_DESCRIPTION, TECHNOLOGY_STACK } from "../config";
 import { getCollection } from "astro:content";
 
 // 获取最新的3篇博客文章
@@ -52,12 +52,11 @@ const posts = (await getCollection("blog"))
 								<span class="command">ls 技术栈/</span>
 							</div>
 							<div class="line output">
-								<span class="tech-tag">HTML5</span>
-								<span class="tech-tag">CSS3</span>
-								<span class="tech-tag">JavaScript</span>
-								<span class="tech-tag">TypeScript</span>
-								<span class="tech-tag">React</span>
-								<span class="tech-tag">Astro</span>
+								{
+									TECHNOLOGY_STACK.map((item) => (
+										<span class="tech-tag">{item.name}</span>
+									))
+								}
 							</div>
 							<div class="line">
 								<span class="prompt">$</span>
@@ -222,6 +221,7 @@ const posts = (await getCollection("blog"))
 	.output {
 		color: rgb(var(--syntax-val));
 		padding-left: 1.5rem;
+		flex-wrap: wrap;
 	}
 
 	.tech-tag {
@@ -412,7 +412,6 @@ const posts = (await getCollection("blog"))
 		}
 
 		.line.output {
-			flex-wrap: wrap;
 			padding-left: 0.5rem;
 		}
 
