@@ -1,5 +1,5 @@
 export const SITE_TITLE = 'XIAOJUESHI';
-export const SITE_DESCRIPTION = '分享前端开发经验、技术见解和编程思考的个人博客';
+export const SITE_DESCRIPTION = 'A personal blog sharing front-end development experiences, technical insights, and programming thoughts.';
 
 export const SOCIAL_MEDIA = [
   {
