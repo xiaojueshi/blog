@@ -9,8 +9,6 @@ import { getCollection } from "astro:content";
 const posts = (await getCollection("blog"))
 	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
 	.slice(0, 3);
-
-console.log(posts);
 ---
 
 <!doctype html>
@@ -24,7 +22,7 @@ console.log(posts);
 			<section class="hero">
 				<div class="container">
 					<h1>
-						<span class="code-style">&lt;</span>前端工程师<span
+						<span class="code-style">&lt;</span>{SITE_TITLE}<span
 							class="code-style">/&gt;</span
 						>
 					</h1>
@@ -39,7 +37,7 @@ console.log(posts);
 						<div class="terminal-content">
 							<div class="line">
 								<span class="prompt">$</span>
-								<span class="command">cd 前端工程师的代码空间</span>
+								<span class="command">cd {SITE_TITLE}</span>
 							</div>
 							<div class="line">
 								<span class="prompt">$</span>
@@ -227,13 +225,14 @@ console.log(posts);
 	}
 
 	.tech-tag {
-		display: inline-block;
+		display: inline-flex;
 		background-color: rgba(var(--syntax-highlight), 0.5);
-		padding: 0.1rem 0.5rem;
+		padding: 0.2rem 0.6rem;
 		border-radius: 4px;
-		margin-right: 0.5rem;
-		margin-bottom: 0.5rem;
+		margin: 0.25rem;
 		color: rgb(var(--syntax-name));
+		white-space: nowrap;
+		font-size: 0.85em;
 	}
 
 	.cursor {
@@ -410,6 +409,17 @@ console.log(posts);
 		.features-grid,
 		.posts-grid {
 			grid-template-columns: 1fr;
+		}
+
+		.line.output {
+			flex-wrap: wrap;
+			padding-left: 0.5rem;
+		}
+
+		.tech-tag {
+			padding: 0.15rem 0.4rem;
+			margin: 0.15rem;
+			font-size: 0.8em;
 		}
 	}
 </style>

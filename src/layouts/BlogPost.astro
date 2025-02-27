@@ -1,11 +1,11 @@
 ---
-import type { CollectionEntry } from 'astro:content';
-import BaseHead from '../components/BaseHead.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
-import FormattedDate from '../components/FormattedDate.astro';
+import type { CollectionEntry } from "astro:content";
+import BaseHead from "../components/BaseHead.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import FormattedDate from "../components/FormattedDate.astro";
 
-type Props = CollectionEntry<'blog'>['data'];
+type Props = CollectionEntry<"blog">["data"];
 
 const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 ---
@@ -15,7 +15,6 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 		<BaseHead title={title} description={description} />
 		<style>
 			main {
-				width: calc(100% - 2em);
 				max-width: 100%;
 				margin: 0;
 			}
@@ -59,7 +58,11 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 		<main>
 			<article>
 				<div class="hero-image">
-					{heroImage && <img width={1020} height={510} src={heroImage} alt="" />}
+					{
+						heroImage && (
+							<img width={1020} height={510} src={heroImage} alt="" />
+						)
+					}
 				</div>
 				<div class="prose">
 					<div class="title">
@@ -81,5 +84,43 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 			</article>
 		</main>
 		<Footer />
+
+		<!-- 返回顶部按钮 -->
+		<button class="back-to-top" aria-label="返回顶部">
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="24"
+				height="24"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+			>
+				<path d="M12 19V5M5 12l7-7 7 7"></path>
+			</svg>
+		</button>
+
+		{/* 客户端交互脚本 */}
+		<script is:inline>
+			document.addEventListener("DOMContentLoaded", () => {
+				const backToTop = document.querySelector(".back-to-top");
+
+				window.addEventListener("scroll", () => {
+					if (window.scrollY > 300) {
+						backToTop.classList.add("show");
+					} else {
+						backToTop.classList.remove("show");
+					}
+				});
+
+				backToTop.addEventListener("click", (e) => {
+					e.preventDefault();
+					window.scrollTo({
+						top: 0,
+						behavior: "smooth",
+					});
+				});
+			});
+		</script>
 	</body>
 </html>
