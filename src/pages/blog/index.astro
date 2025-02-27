@@ -100,7 +100,7 @@ const posts = (await getCollection("blog")).sort(
 										height={360}
 										src={post.data.heroImage as string}
 										alt=""
-										loading={index <= 2 ? "eager" : "lazy"}
+										loading={index <= 4 ? "eager" : "lazy"}
 									/>
 									<h4 class="title">{post.data.title}</h4>
 									<p class="date">
