@@ -92,7 +92,7 @@ const posts = (await getCollection("blog")).sort(
 			<section>
 				<ul>
 					{
-						posts.map((post) => (
+						posts.map((post, index) => (
 							<li>
 								<a href={`/blog/${post.id}/`}>
 									<Image
@@ -100,7 +100,7 @@ const posts = (await getCollection("blog")).sort(
 										height={360}
 										src={post.data.heroImage as string}
 										alt=""
-										loading="eager"
+										loading={index <= 2 ? "eager" : "lazy"}
 									/>
 									<h4 class="title">{post.data.title}</h4>
 									<p class="date">

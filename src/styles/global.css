@@ -149,6 +149,9 @@ main {
 		color var(--transition-speed) ease,
 		border-color var(--transition-speed) ease,
 		box-shadow var(--transition-speed) ease;
+
+	/* 透明处理 */
+	-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 
 h1,
