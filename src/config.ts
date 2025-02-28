@@ -29,29 +29,10 @@ export const SOCIAL_MEDIA = [
     url: "https://github.com/xiaojueshi",
     icon: "fab fa-github",
   },
-  {
-    name: "Twitter",
-    url: "https://twitter.com/xiaojueshi",
-    icon: "fab fa-twitter",
-  },
 ];
 
 // 技术栈
 export const TECHNOLOGY_STACK = [
-  {
-    name: "React",
-    url: "https://reactjs.org/",
-    icon: "fab fa-react",
-  },
-  {
-    name: "TypeScript",
-    url: "https://www.typescriptlang.org/",
-    icon: "fab fa-js",
-  },
-  {
-    name: "Astro",
-    url: "https://astro.build/",
-  },
   {
     name: "HTML5",
     url: "https://developer.mozilla.org/en-US/docs/Web/HTML",
@@ -65,11 +46,12 @@ export const TECHNOLOGY_STACK = [
     url: "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
   },
   {
-    name: "Node.js",
-    url: "https://nodejs.org/",
+    name: "TypeScript",
+    url: "https://www.typescriptlang.org/",
+    icon: "fab fa-js",
   },
   {
-    name: "Express.js",
-    url: "https://expressjs.com/",
+    name: "Node.js",
+    url: "https://nodejs.org/",
   },
 ];

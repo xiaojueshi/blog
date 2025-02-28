@@ -15,7 +15,7 @@ export const ui = {
     // 首页
     "home.subtitle": "Writing elegant code, building a beautiful web world",
     "home.terminal.title": "Terminal",
-    "home.terminal.profile": "Personal profile.txt",
+    "home.terminal.profile": "personal_profile.txt",
     "home.terminal.skills":
       "Love front-end technology, good at JavaScript, CSS and modern frameworks",
     "home.terminal.exploration":
