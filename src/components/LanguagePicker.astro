@@ -1,0 +1,70 @@
+---
+import { languages } from "../i18n/ui";
+import { getLangFromUrl, getLocalizedPathname } from "../i18n/utils";
+
+// 获取当前URL和语言
+const url = Astro.url;
+const currentLang = getLangFromUrl(url);
+const targetLang = currentLang === "zh" ? "en" : "zh";
+---
+
+<div class="language-picker">
+  <a
+    href={getLocalizedPathname(
+      { pathname: url.pathname, search: url.search },
+      targetLang as keyof typeof languages,
+    )}
+    class="lang-toggle"
+    aria-label={`切换到${targetLang === "zh" ? "中文" : "英文"}`}
+    title={`切换到${targetLang === "zh" ? "中文" : "英文"}`}
+  >
+    <i class="fas fa-globe"></i>
+    <span class="lang-code">{currentLang.toUpperCase()}</span>
+  </a>
+</div>
+
+<style>
+  .language-picker {
+    display: flex;
+    align-items: center;
+    margin-left: 0.5rem;
+  }
+
+  .lang-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgb(var(--gray-dark));
+    text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    padding: 0.4rem 0.6rem;
+    position: relative;
+  }
+
+  .lang-toggle:hover {
+    background-color: rgba(var(--gray-light), 0.5);
+    color: var(--accent);
+  }
+
+  .lang-toggle i {
+    font-size: 1rem;
+  }
+
+  .lang-code {
+    font-size: 0.7rem;
+    font-weight: bold;
+    margin-left: 0.3rem;
+  }
+
+  @media (max-width: 768px) {
+    .language-picker {
+      margin-left: 0.5rem;
+      margin-right: 0.5rem;
+    }
+
+    .lang-toggle {
+      padding: 0.3rem 0.5rem;
+    }
+  }
+</style>

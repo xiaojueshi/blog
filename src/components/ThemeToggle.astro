@@ -2,76 +2,55 @@
 
 ---
 
-<theme-toggle>
-  <button id="theme-toggle" title="切换主题">
-    <!-- 太阳图标 (浅色主题) -->
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      id="sun-icon"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <circle cx="12" cy="12" r="5"></circle>
-      <line x1="12" y1="1" x2="12" y2="3"></line>
-      <line x1="12" y1="21" x2="12" y2="23"></line>
-      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-      <line x1="1" y1="12" x2="3" y2="12"></line>
-      <line x1="21" y1="12" x2="23" y2="12"></line>
-      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-    </svg>
-    <!-- 月亮图标 (深色主题) -->
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      id="moon-icon"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-    </svg>
-  </button>
-</theme-toggle>
+<div class="theme-toggle-wrapper">
+  <theme-toggle>
+    <button id="theme-toggle" title="切换主题">
+      <!-- 太阳图标 (浅色主题) -->
+      <i class="fas fa-sun" id="sun-icon"></i>
+      <!-- 月亮图标 (深色主题) -->
+      <i class="fas fa-moon" id="moon-icon"></i>
+    </button>
+  </theme-toggle>
+</div>
 
 <style>
+  .theme-toggle-wrapper {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+  }
+
   #theme-toggle {
     display: flex;
     align-items: center;
     justify-content: center;
     border: 1px solid rgba(var(--border), 0.3);
-    background-color: rgba(var(--gray), 0.08);
+    background-color: rgba(var(--card-background), 0.8);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     cursor: pointer;
-    padding: 0.5rem;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     transition:
       background-color 0.2s ease,
-      border-color 0.2s ease;
+      border-color 0.2s ease,
+      transform 0.2s ease;
   }
 
   #theme-toggle:hover {
     background-color: rgba(var(--gray), 0.15);
     border-color: rgba(var(--border), 0.5);
+    transform: scale(1.05);
   }
 
-  #theme-toggle svg {
-    width: 24px;
-    height: 24px;
+  #sun-icon,
+  #moon-icon {
+    font-size: 1.2rem;
     color: rgb(var(--gray-dark));
     transition:
-      transform 0.2s ease,
-      opacity 0.2s ease;
+      transform 0.3s ease,
+      opacity 0.3s ease;
   }
 
   #sun-icon {
@@ -93,6 +72,18 @@
   :global([data-theme="dark"]) #moon-icon {
     opacity: 0;
     transform: scale(0.5);
+  }
+
+  @media (max-width: 768px) {
+    .theme-toggle-wrapper {
+      bottom: 15px;
+      right: 15px;
+    }
+
+    #theme-toggle {
+      width: 36px;
+      height: 36px;
+    }
   }
 </style>
 

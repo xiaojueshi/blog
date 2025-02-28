@@ -1,0 +1,87 @@
+---
+import { type CollectionEntry, getCollection } from "astro:content";
+import BlogPost from "../../../layouts/BlogPost.astro";
+import { render } from "astro:content";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("blog");
+
+  // 创建一个映射，用于存储每篇文章在每种语言中的版本
+  const postsBySlug = new Map();
+
+  // 首先，按照slug对文章进行分组
+  posts.forEach((post) => {
+    const slug = post.id;
+    const language = post.data.language || "en"; // 默认为英文
+
+    if (!postsBySlug.has(slug)) {
+      postsBySlug.set(slug, new Map());
+    }
+
+    postsBySlug.get(slug).set(language, post);
+  });
+
+  // 然后，为中文路径生成路径
+  const paths: {
+    params: { slug: string };
+    props: { post: CollectionEntry<"blog">; isUsingFallback: boolean };
+  }[] = [];
+
+  postsBySlug.forEach((langMap, slug) => {
+    // 首先尝试获取中文文章
+    let post = langMap.get("zh");
+    let isUsingFallback = false;
+
+    // 如果没有中文文章，则尝试获取英文文章
+    if (!post) {
+      post = langMap.get("en");
+      isUsingFallback = true;
+    }
+
+    // 如果找到了文章（无论是中文还是英文），则生成路径
+    if (post) {
+      paths.push({
+        params: { slug },
+        props: { post, isUsingFallback },
+      });
+    }
+  });
+
+  return paths;
+}
+
+interface Props {
+  post: CollectionEntry<"blog">;
+  isUsingFallback: boolean;
+}
+
+const { post, isUsingFallback } = Astro.props;
+const { Content } = await render(post);
+---
+
+<BlogPost {...post.data}>
+  {
+    isUsingFallback && (
+      <div class="fallback-notice">
+        <p>此内容暂无中文版本，显示英文版本。</p>
+      </div>
+    )
+  }
+  <Content />
+</BlogPost>
+
+<style>
+  .fallback-notice {
+    background-color: #f8f9fa;
+    border-left: 4px solid #6c757d;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border-radius: 0 4px 4px 0;
+  }
+
+  .fallback-notice p {
+    margin: 0;
+    color: #495057;
+    font-style: italic;
+  }
+</style>

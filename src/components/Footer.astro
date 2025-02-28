@@ -2,27 +2,31 @@
 const today = new Date();
 import { SITE_DESCRIPTION, SITE_TITLE } from "../config";
 import { SOCIAL_MEDIA } from "../config";
+import { getLangFromUrl, useTranslations } from "../i18n/utils";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
 ---
 
 <footer>
 	<div class="footer-container">
 		<div class="footer-main">
 			<div class="footer-section">
-				<h4>关于</h4>
+				<h4>{t("footer.about")}</h4>
 				<p>
 					{SITE_TITLE}，{SITE_DESCRIPTION}
 				</p>
 			</div>
 			<div class="footer-section">
-				<h4>导航</h4>
+				<h4>{t("footer.nav")}</h4>
 				<ul>
-					<li><a href="/">首页</a></li>
-					<li><a href="/blog">博客</a></li>
-					<li><a href="/about">关于</a></li>
+					<li><a href={`/${lang}/`}>{t("nav.home")}</a></li>
+					<li><a href={`/${lang}/blog`}>{t("nav.blog")}</a></li>
+					<li><a href={`/${lang}/about`}>{t("nav.about")}</a></li>
 				</ul>
 			</div>
 			<div class="footer-section">
-				<h4>社交媒体</h4>
+				<h4>{t("footer.social")}</h4>
 				<div class="social-links">
 					{
 						SOCIAL_MEDIA.map((item) => (
@@ -37,7 +41,7 @@ import { SOCIAL_MEDIA } from "../config";
 		<div class="copyright">
 			<div class="code-comment">
 				<span>/**</span>
-				<span> * 使用Astro构建</span>
+				<span> * {t("footer.builtWith")}</span>
 				<span> * {today.getFullYear()} XIAOJUESHI</span>
 				<span> */</span>
 			</div>

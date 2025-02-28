@@ -1,21 +1,103 @@
 ---
-import { type CollectionEntry, getCollection } from 'astro:content';
-import BlogPost from '../../layouts/BlogPost.astro';
-import { render } from 'astro:content';
+import { type CollectionEntry, getCollection } from "astro:content";
+import BlogPost from "../../layouts/BlogPost.astro";
+import { render } from "astro:content";
+import { getLangFromUrl } from "../../i18n/utils";
+
+// 获取当前语言
+const lang = getLangFromUrl(Astro.url);
 
 export async function getStaticPaths() {
-	const posts = await getCollection('blog');
-	return posts.map((post) => ({
-		params: { slug: post.id },
-		props: post,
-	}));
-}
-type Props = CollectionEntry<'blog'>;
+	const posts = await getCollection("blog");
 
-const post = Astro.props;
+	// 为每种语言生成路径
+	const languages = ["zh", "en"];
+
+	// 创建一个映射，用于存储每篇文章在每种语言中的版本
+	const postsBySlugAndLang = new Map();
+
+	// 首先，按照slug和language对文章进行分组
+	posts.forEach((post) => {
+		const slug = post.id;
+		const language = post.data.language || "en"; // 默认为英文
+
+		if (!postsBySlugAndLang.has(slug)) {
+			postsBySlugAndLang.set(slug, new Map());
+		}
+
+		postsBySlugAndLang.get(slug).set(language, post);
+	});
+
+	// 然后，为每种语言生成路径
+	const paths: {
+		params: { slug: string; lang: string };
+		props: { post: CollectionEntry<"blog">; requestedLang: string };
+	}[] = [];
+
+	languages.forEach((lang) => {
+		postsBySlugAndLang.forEach((langMap, slug) => {
+			// 首先尝试获取当前语言的文章
+			let post = langMap.get(lang);
+
+			// 如果当前语言没有文章，则尝试获取另一种语言的文章
+			if (!post) {
+				const fallbackLang = lang === "zh" ? "en" : "zh";
+				post = langMap.get(fallbackLang);
+			}
+
+			// 如果找到了文章（无论是当前语言还是回退语言），则生成路径
+			if (post) {
+				paths.push({
+					params: { slug, lang },
+					props: { post, requestedLang: lang },
+				});
+			}
+		});
+	});
+
+	return paths;
+}
+
+interface Props {
+	post: CollectionEntry<"blog">;
+	requestedLang: string;
+}
+
+const { post, requestedLang } = Astro.props;
 const { Content } = await render(post);
+
+// 检查文章语言是否与请求的语言匹配
+const postLang = post.data.language || "en";
+const isUsingFallback = postLang !== requestedLang;
 ---
 
 <BlogPost {...post.data}>
+	{
+		isUsingFallback && (
+			<div class="fallback-notice">
+				<p>
+					{requestedLang === "zh"
+						? "此内容暂无中文版本，显示英文版本。"
+						: "This content is not available in English, showing Chinese version."}
+				</p>
+			</div>
+		)
+	}
 	<Content />
 </BlogPost>
+
+<style>
+	.fallback-notice {
+		background-color: #f8f9fa;
+		border-left: 4px solid #6c757d;
+		padding: 1rem;
+		margin-bottom: 1.5rem;
+		border-radius: 0 4px 4px 0;
+	}
+
+	.fallback-notice p {
+		margin: 0;
+		color: #495057;
+		font-style: italic;
+	}
+</style>

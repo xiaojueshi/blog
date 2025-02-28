@@ -5,13 +5,21 @@ import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import FormattedDate from "../components/FormattedDate.astro";
 import { Image } from "astro:assets";
+import { getLangFromUrl, useTranslations } from "../i18n/utils";
 
 type Props = CollectionEntry<"blog">["data"];
 
 const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
+
+// 获取当前语言
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+// 设置正确的语言标签
+const htmlLang = lang === "zh" ? "zh-CN" : "en";
 ---
 
-<html lang="en">
+<html lang={htmlLang}>
 	<head>
 		<BaseHead title={title} description={description} />
 		<style>
@@ -78,7 +86,7 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 							{
 								updatedDate && (
 									<div class="last-updated-on">
-										Last updated on <FormattedDate date={updatedDate} />
+										{t("blog.lastUpdated")} <FormattedDate date={updatedDate} />
 									</div>
 								)
 							}
@@ -93,7 +101,7 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 		<Footer />
 
 		<!-- 返回顶部按钮 -->
-		<button class="back-to-top" aria-label="返回顶部">
+		<button class="back-to-top" aria-label={t("backToTop")}>
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
 				width="24"
