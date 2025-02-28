@@ -1,5 +1,5 @@
 ---
-import { getLangFromUrl, useTranslations } from "../../../i18n/utils";
+import { useTranslations } from "../../../i18n/utils";
 import BaseHead from "../../../components/BaseHead.astro";
 import Header from "../../../components/Header.astro";
 import Footer from "../../../components/Footer.astro";
@@ -18,28 +18,54 @@ const htmlLang = "zh-CN";
 // 获取所有文章
 const allPosts = await getCollection("blog");
 
-// 按文章ID分组，优先显示中文文章
-const postsBySlug = new Map();
+// 按文章基础名称分组，优先显示中文文章
+const postsByBaseName = new Map();
+
+// 处理文章ID，提取基础名称和语言
+function processPostId(id: string) {
+  // 检查是否在语言子目录中
+  if (id.startsWith("zh/") || id.startsWith("en/")) {
+    const [lang, ...rest] = id.split("/");
+    return {
+      baseName: rest.join("/"),
+      language: lang,
+    };
+  }
+
+  // 默认为英文
+  return {
+    baseName: id,
+    language: "en",
+  };
+}
 
 // 首先添加所有中文文章
 allPosts
-  .filter((post) => post.data.language === "zh")
+  .filter((post) => {
+    const { language } = processPostId(post.id);
+    return language === "zh";
+  })
   .forEach((post) => {
-    postsBySlug.set(post.id, post);
+    const { baseName } = processPostId(post.id);
+    postsByBaseName.set(baseName, post);
   });
 
 // 然后添加没有中文版本的英文文章
 allPosts
-  .filter((post) => post.data.language !== "zh")
+  .filter((post) => {
+    const { language } = processPostId(post.id);
+    return language === "en";
+  })
   .forEach((post) => {
-    if (!postsBySlug.has(post.id)) {
-      postsBySlug.set(post.id, post);
+    const { baseName } = processPostId(post.id);
+    if (!postsByBaseName.has(baseName)) {
+      postsByBaseName.set(baseName, post);
     }
   });
 
 // 转换为数组并排序
-const posts = Array.from(postsBySlug.values()).sort(
-  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+const posts = Array.from(postsByBaseName.values()).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
 );
 ---
 
@@ -100,6 +126,22 @@ const posts = Array.from(postsBySlug.values()).sort(
       ul a:hover img {
         box-shadow: var(--box-shadow);
       }
+      .empty-state {
+        text-align: center;
+        padding: 4rem 1rem;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        margin: 2rem 0;
+      }
+      .empty-state h2 {
+        margin-top: 0;
+        color: #495057;
+      }
+      .empty-state p {
+        color: #6c757d;
+        max-width: 600px;
+        margin: 1rem auto;
+      }
       @media (max-width: 720px) {
         ul {
           gap: 0.5em;
@@ -121,27 +163,37 @@ const posts = Array.from(postsBySlug.values()).sort(
     <Header />
     <main>
       <section>
-        <ul>
-          {
-            posts.map((post, index) => (
-              <li>
-                <a href={`/zh/blog/${post.id}/`}>
-                  <Image
-                    width={720}
-                    height={360}
-                    src={post.data.heroImage as string}
-                    alt=""
-                    loading={index <= 4 ? "eager" : "lazy"}
-                  />
-                  <h4 class="title">{post.data.title}</h4>
-                  <p class="date">
-                    <FormattedDate date={post.data.pubDate} />
-                  </p>
-                </a>
-              </li>
-            ))
-          }
-        </ul>
+        {
+          posts.length > 0 ? (
+            <ul>
+              {posts.map((post, index) => {
+                const { baseName } = processPostId(post.id);
+                return (
+                  <li>
+                    <a href={`/zh/blog/${baseName}/`}>
+                      <Image
+                        width={720}
+                        height={360}
+                        src={post.data.heroImage as string}
+                        alt=""
+                        loading={index <= 4 ? "eager" : "lazy"}
+                      />
+                      <h4 class="title">{post.data.title}</h4>
+                      <p class="date">
+                        <FormattedDate date={post.data.pubDate} />
+                      </p>
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <div class="empty-state">
+              <h2>{t("blog.empty.title")}</h2>
+              <p>{t("blog.empty.description")}</p>
+            </div>
+          )
+        }
       </section>
     </main>
     <Footer />

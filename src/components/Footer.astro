@@ -6,175 +6,180 @@ import { getLangFromUrl, useTranslations } from "../i18n/utils";
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
+
+// 获取当前语言的网站标题和描述
+const siteTitle = lang === "zh" ? SITE_TITLE.zh : SITE_TITLE.en;
+const siteDescription =
+  lang === "zh" ? SITE_DESCRIPTION.zh : SITE_DESCRIPTION.en;
 ---
 
 <footer>
-	<div class="footer-container">
-		<div class="footer-main">
-			<div class="footer-section">
-				<h4>{t("footer.about")}</h4>
-				<p>
-					{SITE_TITLE}，{SITE_DESCRIPTION}
-				</p>
-			</div>
-			<div class="footer-section">
-				<h4>{t("footer.nav")}</h4>
-				<ul>
-					<li><a href={`/${lang}/`}>{t("nav.home")}</a></li>
-					<li><a href={`/${lang}/blog`}>{t("nav.blog")}</a></li>
-					<li><a href={`/${lang}/about`}>{t("nav.about")}</a></li>
-				</ul>
-			</div>
-			<div class="footer-section">
-				<h4>{t("footer.social")}</h4>
-				<div class="social-links">
-					{
-						SOCIAL_MEDIA.map((item) => (
-							<a href={item.url} target="_blank" aria-label={item.name}>
-								<i class={item.icon} />
-							</a>
-						))
-					}
-				</div>
-			</div>
-		</div>
-		<div class="copyright">
-			<div class="code-comment">
-				<span>/**</span>
-				<span> * {t("footer.builtWith")}</span>
-				<span> * {today.getFullYear()} XIAOJUESHI</span>
-				<span> */</span>
-			</div>
-		</div>
-	</div>
+  <div class="footer-container">
+    <div class="footer-main">
+      <div class="footer-section">
+        <h4>{t("footer.about")}</h4>
+        <p>
+          {siteTitle}，{siteDescription}
+        </p>
+      </div>
+      <div class="footer-section">
+        <h4>{t("footer.nav")}</h4>
+        <ul>
+          <li><a href={`/${lang}/`}>{t("nav.home")}</a></li>
+          <li><a href={`/${lang}/blog`}>{t("nav.blog")}</a></li>
+          <li><a href={`/${lang}/about`}>{t("nav.about")}</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>{t("footer.social")}</h4>
+        <div class="social-links">
+          {
+            SOCIAL_MEDIA.map((item) => (
+              <a href={item.url} target="_blank" aria-label={item.name}>
+                <i class={item.icon} />
+              </a>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+    <div class="copyright">
+      <div class="code-comment">
+        <span>/**</span>
+        <span> * {t("footer.builtWith")}</span>
+        <span> * {today.getFullYear()} {siteTitle}</span>
+        <span> */</span>
+      </div>
+    </div>
+  </div>
 </footer>
 
 <style>
-	footer {
-		background-color: rgb(var(--card-background));
-		border-top: 1px solid rgb(var(--border));
-		color: rgb(var(--gray-dark));
-		padding: 3rem 0 2rem;
-	}
+  footer {
+    background-color: rgb(var(--card-background));
+    border-top: 1px solid rgb(var(--border));
+    color: rgb(var(--gray-dark));
+    padding: 3rem 0 2rem;
+  }
 
-	.footer-container {
-		width: var(--content-width);
-		max-width: calc(100% - 2em);
-		margin: 0 auto;
-	}
+  .footer-container {
+    width: var(--content-width);
+    max-width: calc(100% - 2em);
+    margin: 0 auto;
+  }
 
-	.footer-main {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-		gap: 2rem;
-		margin-bottom: 2rem;
-	}
+  .footer-main {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+  }
 
-	.footer-section h4 {
-		font-size: 1.1rem;
-		margin-bottom: 1rem;
-		position: relative;
-		display: inline-block;
-	}
+  .footer-section h4 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    position: relative;
+    display: inline-block;
+  }
 
-	.footer-section h4::after {
-		content: "";
-		position: absolute;
-		bottom: -5px;
-		left: 0;
-		width: 30px;
-		height: 2px;
-		background-color: var(--accent);
-	}
+  .footer-section h4::after {
+    content: "";
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 30px;
+    height: 2px;
+    background-color: var(--accent);
+  }
 
-	.footer-section p {
-		font-size: 0.9rem;
-		line-height: 1.5;
-		color: rgb(var(--gray));
-	}
+  .footer-section p {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: rgb(var(--gray));
+  }
 
-	.footer-section ul {
-		list-style: none;
-		padding: 0;
-		margin: 0;
-	}
+  .footer-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
 
-	.footer-section ul li {
-		margin-bottom: 0.5rem;
-	}
+  .footer-section ul li {
+    margin-bottom: 0.5rem;
+  }
 
-	.footer-section ul li a {
-		color: rgb(var(--gray));
-		text-decoration: none;
-		font-size: 0.9rem;
-		transition: color 0.2s ease;
-	}
+  .footer-section ul li a {
+    color: rgb(var(--gray));
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s ease;
+  }
 
-	.footer-section ul li a:hover {
-		color: var(--accent);
-	}
+  .footer-section ul li a:hover {
+    color: var(--accent);
+  }
 
-	.social-links {
-		display: flex;
-		gap: 1rem;
-	}
+  .social-links {
+    display: flex;
+    gap: 1rem;
+  }
 
-	.social-links a {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 36px;
-		height: 36px;
-		background-color: rgba(var(--gray-light), 0.7);
-		border-radius: 50%;
-		color: rgb(var(--gray-dark));
-		transition:
-			background-color 0.2s ease,
-			color 0.2s ease,
-			transform 0.2s ease;
-		text-decoration: none; /* 添加这一行 */
-	}
+  .social-links a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background-color: rgba(var(--gray-light), 0.7);
+    border-radius: 50%;
+    color: rgb(var(--gray-dark));
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease,
+      transform 0.2s ease;
+    text-decoration: none; /* 添加这一行 */
+  }
 
-	.social-links a:hover {
-		background-color: var(--accent);
-		color: white;
-		transform: translateY(-3px);
-	}
+  .social-links a:hover {
+    background-color: var(--accent);
+    color: white;
+    transform: translateY(-3px);
+  }
 
-	.copyright {
-		text-align: center;
-		border-top: 1px solid rgba(var(--border), 0.5);
-		padding-top: 1.5rem;
-		font-size: 0.85rem;
-		color: rgb(var(--gray));
-	}
+  .copyright {
+    text-align: center;
+    border-top: 1px solid rgba(var(--border), 0.5);
+    padding-top: 1.5rem;
+    font-size: 0.85rem;
+    color: rgb(var(--gray));
+  }
 
-	.code-comment {
-		font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		color: rgb(var(--syntax-comment));
-	}
+  .code-comment {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: rgb(var(--syntax-comment));
+  }
 
-	/* 响应式样式 */
-	@media (max-width: 720px) {
-		.footer-main {
-			grid-template-columns: 1fr;
-			gap: 1.5rem;
-		}
+  /* 响应式样式 */
+  @media (max-width: 720px) {
+    .footer-main {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
 
-		.footer-section {
-			text-align: center;
-		}
+    .footer-section {
+      text-align: center;
+    }
 
-		.footer-section h4::after {
-			left: 50%;
-			transform: translateX(-50%);
-		}
+    .footer-section h4::after {
+      left: 50%;
+      transform: translateX(-50%);
+    }
 
-		.social-links {
-			justify-content: center;
-		}
-	}
+    .social-links {
+      justify-content: center;
+    }
+  }
 </style>

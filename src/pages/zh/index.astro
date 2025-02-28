@@ -17,12 +17,16 @@ const posts = (await getCollection("blog"))
 
 // 设置正确的语言标签
 const htmlLang = "zh-CN";
+
+// 获取当前语言的网站标题和描述
+const siteTitle = SITE_TITLE.zh;
+const siteDescription = SITE_DESCRIPTION.zh;
 ---
 
 <!doctype html>
 <html lang={htmlLang}>
   <head>
-    <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+    <BaseHead title={siteTitle} description={siteDescription} />
   </head>
   <body>
     <Header />
@@ -30,7 +34,7 @@ const htmlLang = "zh-CN";
       <section class="hero">
         <div class="container">
           <h1>
-            <span class="code-style">&lt;</span>{SITE_TITLE}<span
+            <span class="code-style">&lt;</span>{siteTitle}<span
               class="code-style">/&gt;</span
             >
           </h1>
@@ -45,7 +49,7 @@ const htmlLang = "zh-CN";
             <div class="terminal-content">
               <div class="line">
                 <span class="prompt">$</span>
-                <span class="command">cd {SITE_TITLE}</span>
+                <span class="command">cd {siteTitle}</span>
               </div>
               <div class="line">
                 <span class="prompt">$</span>

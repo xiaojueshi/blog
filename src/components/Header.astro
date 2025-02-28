@@ -7,212 +7,213 @@ import { getLangFromUrl, useTranslations } from "../i18n/utils";
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
+const siteTitle = lang === "zh" ? SITE_TITLE.zh : SITE_TITLE.en;
 ---
 
 <header>
-	<div class="header-container">
-		<div class="logo">
-			<h2><a href={`/${lang}/`}>{SITE_TITLE}</a></h2>
-		</div>
+  <div class="header-container">
+    <div class="logo">
+      <h2><a href={`/${lang}/`}>{siteTitle}</a></h2>
+    </div>
 
-		<nav>
-			<div class="internal-links nav-links">
-				<HeaderLink href={`/${lang}/`}>{t("nav.home")}</HeaderLink>
-				<HeaderLink href={`/${lang}/blog`}>{t("nav.blog")}</HeaderLink>
-				<HeaderLink href={`/${lang}/about`}>{t("nav.about")}</HeaderLink>
-			</div>
+    <nav>
+      <div class="internal-links nav-links">
+        <HeaderLink href={`/${lang}/`}>{t("nav.home")}</HeaderLink>
+        <HeaderLink href={`/${lang}/blog`}>{t("nav.blog")}</HeaderLink>
+        <HeaderLink href={`/${lang}/about`}>{t("nav.about")}</HeaderLink>
+      </div>
 
-			<div class="nav-controls">
-				<div class="desktop-controls">
-					<LanguagePicker />
-				</div>
+      <div class="nav-controls">
+        <div class="desktop-controls">
+          <LanguagePicker />
+        </div>
 
-				<div class="mobile-controls">
-					<LanguagePicker />
-					<button
-						class="mobile-menu-toggle"
-						aria-label={lang === "zh" ? "打开菜单" : "Open menu"}
-					>
-						<i class="fas fa-bars"></i>
-					</button>
-				</div>
-			</div>
-		</nav>
-		<ThemeToggle />
-	</div>
-	<style>
-		header {
-			margin: 0;
-			padding: 0 1em;
-			background: rgb(var(--card-background));
-			box-shadow: var(--box-shadow);
-			border-bottom: 1px solid rgb(var(--border));
-			position: sticky;
-			top: 0;
-			z-index: 100;
-		}
+        <div class="mobile-controls">
+          <LanguagePicker />
+          <button
+            class="mobile-menu-toggle"
+            aria-label={lang === "zh" ? "打开菜单" : "Open menu"}
+          >
+            <i class="fas fa-bars"></i>
+          </button>
+        </div>
+      </div>
+    </nav>
+    <ThemeToggle />
+  </div>
+  <style>
+    header {
+      margin: 0;
+      padding: 0 1em;
+      background: rgb(var(--card-background));
+      box-shadow: var(--box-shadow);
+      border-bottom: 1px solid rgb(var(--border));
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
 
-		.header-container {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			width: 100%;
-			height: var(--navbar-height);
-		}
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      height: var(--navbar-height);
+    }
 
-		h2 {
-			margin: 0;
-			font-size: 1.2em;
-			font-weight: 700;
-		}
+    h2 {
+      margin: 0;
+      font-size: 1.2em;
+      font-weight: 700;
+    }
 
-		h2 a,
-		h2 a.active {
-			text-decoration: none;
-			color: rgb(var(--black));
-		}
+    h2 a,
+    h2 a.active {
+      text-decoration: none;
+      color: rgb(var(--black));
+    }
 
-		nav {
-			display: flex;
-			align-items: center;
-			justify-content: flex-end;
-			flex: 1;
-		}
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      flex: 1;
+    }
 
-		.nav-controls {
-			display: flex;
-			align-items: center;
-			margin-left: 1rem;
-			transform: translateY(-0.2rem);
-		}
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      margin-left: 1rem;
+      transform: translateY(-0.2rem);
+    }
 
-		.internal-links {
-			display: flex;
-			align-items: center;
-		}
+    .internal-links {
+      display: flex;
+      align-items: center;
+    }
 
-		nav a {
-			padding: 0.5em;
-			color: rgb(var(--gray-dark));
-			border-bottom: 2px solid transparent;
-			text-decoration: none;
-			font-weight: 500;
-			transition:
-				color 0.2s ease,
-				border-color 0.2s ease;
-		}
+    nav a {
+      padding: 0.5em;
+      color: rgb(var(--gray-dark));
+      border-bottom: 2px solid transparent;
+      text-decoration: none;
+      font-weight: 500;
+      transition:
+        color 0.2s ease,
+        border-color 0.2s ease;
+    }
 
-		nav a:hover {
-			color: var(--accent);
-		}
+    nav a:hover {
+      color: var(--accent);
+    }
 
-		nav a.active {
-			text-decoration: none;
-			border-bottom-color: var(--accent);
-			color: var(--accent);
-		}
+    nav a.active {
+      text-decoration: none;
+      border-bottom-color: var(--accent);
+      color: var(--accent);
+    }
 
-		.desktop-controls {
-			display: flex;
-			align-items: center;
-		}
+    .desktop-controls {
+      display: flex;
+      align-items: center;
+    }
 
-		.mobile-controls {
-			display: none;
-			align-items: center;
-		}
+    .mobile-controls {
+      display: none;
+      align-items: center;
+    }
 
-		.mobile-menu-toggle {
-			background: none;
-			border: none;
-			cursor: pointer;
-			padding: 0.5rem;
-			display: none;
-			font-size: 1.2rem;
-		}
+    .mobile-menu-toggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.5rem;
+      display: none;
+      font-size: 1.2rem;
+    }
 
-		@media (max-width: 768px) {
-			.nav-links {
-				display: none;
-				position: absolute;
-				top: 100%;
-				left: 0;
-				right: 0;
-				background: rgb(var(--card-background));
-				flex-direction: column;
-				padding: 1rem;
-				box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-				z-index: 100;
-			}
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: rgb(var(--card-background));
+        flex-direction: column;
+        padding: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 100;
+      }
 
-			.nav-links.active {
-				display: flex;
-			}
+      .nav-links.active {
+        display: flex;
+      }
 
-			.mobile-menu-toggle {
-				display: block;
-			}
+      .mobile-menu-toggle {
+        display: block;
+      }
 
-			.mobile-controls {
-				display: flex;
-				align-items: center;
-			}
+      .mobile-controls {
+        display: flex;
+        align-items: center;
+      }
 
-			.desktop-controls {
-				display: none;
-			}
+      .desktop-controls {
+        display: none;
+      }
 
-			.internal-links {
-				gap: 1rem;
-			}
-		}
+      .internal-links {
+        gap: 1rem;
+      }
+    }
 
-		@media (max-width: 480px) {
-			.logo {
-				max-width: 60%;
-			}
+    @media (max-width: 480px) {
+      .logo {
+        max-width: 60%;
+      }
 
-			.mobile-menu-toggle {
-				padding: 0.5rem;
-				color: rgb(var(--black));
-			}
+      .mobile-menu-toggle {
+        padding: 0.5rem;
+        color: rgb(var(--black));
+      }
 
-			.nav-links {
-				padding: 0.5rem;
-			}
-		}
-	</style>
+      .nav-links {
+        padding: 0.5rem;
+      }
+    }
+  </style>
 
-	<script is:inline>
-		// 移动端菜单交互逻辑
-		document.addEventListener("DOMContentLoaded", () => {
-			const menuToggle = document.querySelector(".mobile-menu-toggle");
-			const navLinks = document.querySelector(".nav-links");
+  <script is:inline>
+    // 移动端菜单交互逻辑
+    document.addEventListener("DOMContentLoaded", () => {
+      const menuToggle = document.querySelector(".mobile-menu-toggle");
+      const navLinks = document.querySelector(".nav-links");
 
-			// 切换菜单显示状态
-			menuToggle?.addEventListener("click", (e) => {
-				e.stopPropagation();
-				navLinks.classList.toggle("active");
-			});
+      // 切换菜单显示状态
+      menuToggle?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        navLinks.classList.toggle("active");
+      });
 
-			// 点击页面其他区域关闭菜单
-			document.addEventListener("click", () => {
-				navLinks.classList.remove("active");
-			});
+      // 点击页面其他区域关闭菜单
+      document.addEventListener("click", () => {
+        navLinks.classList.remove("active");
+      });
 
-			// 阻止菜单区域点击事件冒泡
-			navLinks?.addEventListener("click", (e) => {
-				e.stopPropagation();
-			});
+      // 阻止菜单区域点击事件冒泡
+      navLinks?.addEventListener("click", (e) => {
+        e.stopPropagation();
+      });
 
-			// 处理窗口大小变化
-			const handleResize = () => {
-				if (window.innerWidth > 768) {
-					navLinks.classList.remove("active");
-				}
-			};
+      // 处理窗口大小变化
+      const handleResize = () => {
+        if (window.innerWidth > 768) {
+          navLinks.classList.remove("active");
+        }
+      };
 
-			window.addEventListener("resize", handleResize);
-		});
-	</script>
+      window.addEventListener("resize", handleResize);
+    });
+  </script>
 </header>

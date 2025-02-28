@@ -3,6 +3,7 @@
 // all pages through the use of the <BaseHead /> component.
 import "../styles/global.css";
 import { SITE_TITLE } from "../config";
+import { getLangFromUrl } from "../i18n/utils";
 
 interface Props {
   title: string;
@@ -11,6 +12,8 @@ interface Props {
 }
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const lang = getLangFromUrl(Astro.url);
+const siteTitle = lang === "zh" ? SITE_TITLE.zh : SITE_TITLE.en;
 
 const { title, description, image = "/blog-placeholder-1.jpg" } = Astro.props;
 ---
@@ -23,7 +26,7 @@ const { title, description, image = "/blog-placeholder-1.jpg" } = Astro.props;
 <link
   rel="alternate"
   type="application/rss+xml"
-  title={SITE_TITLE}
+  title={siteTitle}
   href={new URL("rss.xml", Astro.site)}
 />
 <meta name="generator" content={Astro.generator} />
@@ -101,11 +104,11 @@ const { title, description, image = "/blog-placeholder-1.jpg" } = Astro.props;
 
     // 否则，根据系统偏好设置主题
     const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)",
+      "(prefers-color-scheme: dark)"
     ).matches;
     document.documentElement.setAttribute(
       "data-theme",
-      prefersDark ? "dark" : "light",
+      prefersDark ? "dark" : "light"
     );
   }
 
