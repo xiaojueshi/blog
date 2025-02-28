@@ -1,68 +1,43 @@
-# Astro Starter Kit: Blog
+# 项目名称: XIAOJUESHI
 
-```sh
-npm create astro@latest -- --template blog
-```
+欢迎来到 XIAOJUESHI 的个人博客！这个博客旨在分享前端开发经验、技术见解和编程思考。
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/blog)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/astro/tree/latest/examples/blog)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/withastro/astro?devcontainer_path=.devcontainer/blog/devcontainer.json)
+## 特性
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+- **多语言支持**: 目前支持中文和英文。
+- **主题切换**: 支持浅色和深色模式。
+- **响应式设计**: 适配各种设备，提供良好的用户体验。
 
-![blog](https://github.com/withastro/astro/assets/2244813/ff10799f-a816-4703-b967-c78997e8323d)
+## 技术栈
 
-Features:
+- **前端**: 使用 JavaScript、TypeScript、React 和 Astro。
+- **样式**: 使用 CSS3 和现代前端框架。
 
-- ✅ Minimal styling (make it your own!)
-- ✅ 100/100 Lighthouse performance
-- ✅ SEO-friendly with canonical URLs and OpenGraph data
-- ✅ Sitemap support
-- ✅ RSS Feed support
-- ✅ Markdown & MDX support
+## 安装与使用
 
-## 🚀 Project Structure
+1. 克隆项目：
+   ```bash
+   git clone https://github.com/xiaojueshi/blog.git
+   ```
+2. 进入项目目录：
+   ```bash
+   cd blog
+   ```
+3. 安装依赖：
+   ```bash
+   npm install
+   ```
+4. 启动开发服务器：
+   ```bash
+   npm run dev
+   ```
 
-Inside of your Astro project, you'll see the following folders and files:
+## 贡献
 
-```text
-├── public/
-├── src/
-│   ├── components/
-│   ├── content/
-│   ├── layouts/
-│   └── pages/
-├── astro.config.mjs
-├── README.md
-├── package.json
-└── tsconfig.json
-```
+欢迎任何形式的贡献！请提交问题或拉取请求。
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## 联系我
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+如有任何问题或建议，请通过社交媒体与我联系。
 
-The `src/content/` directory contains "collections" of related Markdown and MDX documents. Use `getCollection()` to retrieve posts from `src/content/blog/`, and type-check your frontmatter using an optional schema. See [Astro's Content Collections docs](https://docs.astro.build/en/guides/content-collections/) to learn more.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Check out [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
-
-## Credit
-
-This theme is based off of the lovely [Bear Blog](https://github.com/HermanMartinus/bearblog/).
+感谢您的访问，希望您在这里找到有价值的内容！
