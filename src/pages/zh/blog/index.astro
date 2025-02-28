@@ -15,6 +15,10 @@ const t = useTranslations(lang);
 // 设置正确的语言标签
 const htmlLang = "zh-CN";
 
+// 获取当前语言的网站标题和描述
+const siteTitle = SITE_TITLE.zh;
+const siteDescription = SITE_DESCRIPTION.zh;
+
 // 获取所有文章
 const allPosts = await getCollection("blog");
 
@@ -72,7 +76,7 @@ const posts = Array.from(postsByBaseName.values()).sort(
 <!doctype html>
 <html lang={htmlLang}>
   <head>
-    <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+    <BaseHead title={siteTitle} description={siteDescription} />
     <style>
       main {
         width: 960px;
