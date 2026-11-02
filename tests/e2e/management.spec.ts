@@ -63,7 +63,9 @@ test('知识库支持章节、新建笔记与引用，公开目录隐藏私人�
   await page.getByRole('button',{name:'新建知识库',exact:true}).click();await page.getByLabel('知识库名称',{exact:true}).fill(title)
   await page.getByRole('button',{name:'创建并编辑目录',exact:true}).click()
   await expect(page.getByRole('heading',{name:title,exact:true})).toBeVisible()
-  const baseId=page.url().split('/').pop()!
+  const createdBase=(await state(page)).bases.find(b=>b.title===title)
+  if(!createdBase) throw new Error('新建的知识库未保存到管理数据')
+  const baseId=createdBase.id
   await page.getByRole('button',{name:'新建章节',exact:true}).click();await page.getByLabel('章节名称').fill('安装与运行')
   const chapterId=await page.locator('.directory-row.selected').getAttribute('class')
   expect(chapterId).toContain('selected')
@@ -74,9 +76,12 @@ test('知识库支持章节、新建笔记与引用，公开目录隐藏私人�
   await page.getByRole('checkbox',{name:/公开知识库/}).check();await page.getByRole('button',{name:'保存目录',exact:true}).first().click()
   await expect(page.locator('.notice[role="status"]')).toContainText('目录已保存')
   await page.screenshot({path:testInfo.outputPath('knowledge-manager-light.png'),fullPage:true})
+  await expect.poll(async()=>{const bases=await request.get('/api/knowledge').then(r=>r.json());return bases.some((b:KnowledgeBase)=>b.id===baseId)}, {timeout:10000}).toBeTruthy()
   const publicBases=await request.get('/api/knowledge').then(r=>r.json());const publicBase=publicBases.find((b:KnowledgeBase)=>b.id===baseId)
+  if(!publicBase) throw new Error('刚保存的知识库未出现在公开目录')
   expect(publicBase.nodes.some((n:any)=>n.contentId===privateNote.id)).toBeFalsy();expect(JSON.stringify(publicBase)).not.toContain(privateNote.title)
   const first=publicBase.nodes.find((n:any)=>n.contentId==='quiet-design')
+  if(!first) throw new Error('公开知识库缺少示例内容引用')
   await ready(page,`/garden?collection=handbook-${suffix}&entry=${first.id}`)
   await expect(page.getByRole('heading',{name:'好的界面，是让复杂消失',exact:true})).toBeVisible();await expect(page.getByText('安装与运行',{exact:true}).first()).toBeVisible()
   await page.getByRole('navigation',{name:'章节阅读导航'}).getByRole('link').filter({hasText:'下一篇'}).click()
