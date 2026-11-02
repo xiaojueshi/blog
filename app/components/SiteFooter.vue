@@ -1,0 +1,4 @@
+<script setup lang="ts">import { ArrowUpRight, Rss, Github } from 'lucide-vue-next'
+const { data: site } = useNuxtData<{ settings: { name: string; github: string } }>('site-workspace')
+</script>
+<template><footer class="site-footer shell"><div><NuxtLink to="/" class="footer-brand">{{ site?.settings.name || 'XIAOJUESHI' }}</NuxtLink><p>技术与日常。</p></div><div class="footer-right"><div class="footer-links"><a :href="site?.settings.github || 'https://github.com/xiaojueshi'" target="_blank" rel="noopener noreferrer"><Github :size="15" /> GitHub <ArrowUpRight :size="12" /></a><a href="/rss.xml"><Rss :size="14" /> RSS</a><NuxtLink to="/admin">工作台 <ArrowUpRight :size="12" /></NuxtLink></div><p>© {{ new Date().getFullYear() }} xiaojueshi <span class="footer-separator">/</span> 个人博客</p></div></footer></template>

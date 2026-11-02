@@ -1,0 +1,19 @@
+<script setup lang="ts">
+import { Plus, BookOpen, ArrowUpRight, LockKeyhole, Globe, Archive, Undo2 } from 'lucide-vue-next'
+import type { KnowledgeBase } from '#shared/workspace'
+const { data: workspace, refresh } = await useAdminWorkspace()
+const creating = ref(false); const showArchived = ref(false); const title = ref(''); const description = ref(''); const busy = ref(false); const message = ref('')
+const list = computed(() => workspace.value?.bases.filter(b => Boolean(b.archived) === showArchived.value) || [])
+async function create() {
+  busy.value = true; message.value = ''
+  try { const base = await $fetch('/api/admin/knowledge', { method: 'POST', body: { title: title.value, description: description.value, visibility: 'private', nodes: [], revision: 0 } }); await refresh(); await navigateTo(`/admin/knowledge/${base.id}`) }
+  catch (e: any) { message.value = e.data?.statusMessage || '创建失败' } finally { busy.value = false }
+}
+async function archive(base: KnowledgeBase) {
+  busy.value = true
+  try { await $fetch('/api/admin/knowledge', { method: 'POST', body: { ...base, archived: !base.archived } }); await refresh(); message.value = base.archived ? '知识库已恢复' : '已归档，正文仍保留，可随时恢复' }
+  catch (e: any) { message.value = e.data?.statusMessage || '操作失败' } finally { busy.value = false }
+}
+useSeoMeta({ title: '知识库管理 — XIAOJUESHI' })
+</script>
+<template><AdminShell><main class="workspace-page"><div class="workspace-page-heading"><div><div class="page-eyebrow">KNOWLEDGE</div><h1>知识库</h1><p>按章节组织内容。一篇内容可以被多个知识库引用。</p></div><button class="button button-dark" @click="creating = !creating"><Plus :size="16" />新建知识库</button></div><p v-if="message" class="notice" role="status">{{ message }}</p><form v-if="creating" class="workspace-panel knowledge-create" @submit.prevent="create"><div class="panel-heading"><h2>新建知识库</h2><span class="small-pill">默认私密</span></div><label class="form-field">知识库名称<input v-model="title" required maxlength="100" placeholder="例如：前端工程手册" /></label><label class="form-field">简介<textarea v-model="description" rows="2" maxlength="500" placeholder="这个知识库用于整理什么？" /></label><div class="panel-actions"><button type="button" class="button button-outline" @click="creating = false">取消</button><button class="button button-dark" :disabled="busy || !title.trim()">创建并编辑目录 <ArrowUpRight :size="15" /></button></div></form><div class="content-toolbar"><div class="segmented"><button :class="{ active: !showArchived }" @click="showArchived = false">使用中</button><button :class="{ active: showArchived }" @click="showArchived = true">已归档</button></div><span class="list-count">{{ list.length }} 个知识库</span></div><div class="knowledge-admin-grid"><article v-for="base in list" :key="base.id" class="knowledge-admin-card"><div class="knowledge-card-top"><BookOpen :size="22" :stroke-width="1.5" /><span class="visibility-badge" :class="base.visibility"><Globe v-if="base.visibility === 'public'" :size="12" /><LockKeyhole v-else :size="12" />{{ base.visibility === 'public' ? '公开' : '私密' }}</span></div><NuxtLink :to="`/admin/knowledge/${base.id}`"><h2>{{ base.title }}</h2><p>{{ base.description || '暂无简介' }}</p></NuxtLink><div class="knowledge-card-stats"><span>{{ base.nodes.filter(n => !n.contentId).length }} 个章节</span><span>{{ new Set(base.nodes.flatMap(n => n.contentId ? [n.contentId] : [])).size }} 项内容</span></div><div class="knowledge-card-bottom"><NuxtLink :to="`/admin/knowledge/${base.id}`" class="text-link">编辑目录 <ArrowUpRight :size="14" /></NuxtLink><button class="subtle-button" :disabled="busy" @click="archive(base)"><Undo2 v-if="base.archived" :size="13" /><Archive v-else :size="13" />{{ base.archived ? '恢复' : '归档' }}</button></div></article></div><div v-if="!list.length" class="empty-state"><BookOpen :size="28" /><h2>{{ showArchived ? '暂无归档知识库' : '创建你的第一个知识库' }}</h2><p>先建立目录，再收录已有内容或直接新建笔记。</p></div></main></AdminShell></template>

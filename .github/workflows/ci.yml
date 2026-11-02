@@ -1,0 +1,53 @@
+name: 项目检查
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test:core
+      - run: pnpm test
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: 浏览器截图与测试报告
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7
+
+  cloudflare:
+    runs-on: ubuntu-latest
+    env:
+      TEST_ADMIN_PASSWORD: ci-admin-${{ github.run_id }}-${{ github.sha }}
+      TEST_SETUP_TOKEN: ci-setup-${{ github.run_id }}-${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:cloudflare
+      - run: pnpm exec wrangler deploy --dry-run --config wrangler.jsonc
+      - name: 验证 Workers 持久化与事务
+        run: |
+          printf 'ADMIN_SETUP_TOKEN="%s"\n' "$TEST_SETUP_TOKEN" > .dev.vars
+          pnpm preview:cloudflare --port 3102 > /tmp/cloudflare-test.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://localhost:3102/api/workspace > /dev/null; then break; fi
+            sleep 1
+          done
+          pnpm test:cloudflare
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: Cloudflare运行日志
+          path: /tmp/cloudflare-test.log

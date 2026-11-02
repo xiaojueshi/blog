@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "xiaojueshi-blog",
+  "account_id": "efb2bee33e0893eaa7be97f448d77d1e",
+  "main": "cloudflare/worker.js",
+  "compatibility_date": "2026-10-24",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "assets": { "directory": ".output/public", "binding": "ASSETS" },
+  "durable_objects": { "bindings": [{ "name": "WORKSPACE", "class_name": "Workspace" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Workspace"] }],
+  "observability": { "enabled": true }
+}
