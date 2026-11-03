@@ -6,6 +6,10 @@
   "compatibility_date": "2026-10-24",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
+  "routes": [
+    { "pattern": "www.xiaojueshi.top", "custom_domain": true },
+    { "pattern": "xiaojueshi.top", "custom_domain": true }
+  ],
   "assets": { "directory": ".output/public", "binding": "ASSETS" },
   "durable_objects": { "bindings": [{ "name": "WORKSPACE", "class_name": "Workspace" }] },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Workspace"] }],

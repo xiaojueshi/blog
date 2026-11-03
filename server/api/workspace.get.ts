@@ -4,4 +4,4 @@ import { workspace, publishedContent } from '../utils/workspace'
  * @returns 公开设置与术语。
  * @throws 数据库失败时返回错误。
  */
-export default defineEventHandler(event => { setHeader(event, 'Cache-Control', 'no-store'); const state = workspace(); const visible = new Set(publishedContent().flatMap(d => [d.categoryId, ...(d.tagIds || [])])); return { settings: state.settings, terms: state.terms.filter(t => t.kind === 'type' || visible.has(t.id)) } })
+export default defineEventHandler(event => { setHeader(event, 'Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300'); const state = workspace(); const visible = new Set(publishedContent().flatMap(d => [d.categoryId, ...(d.tagIds || [])])); return { settings: state.settings, terms: state.terms.filter(t => t.kind === 'type' || visible.has(t.id)) } })

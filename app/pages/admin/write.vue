@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ArrowLeft, ArrowUpRight, Check, Eye, PenLine, Columns2, History, ImagePlus, LockKeyhole, X, BookOpen, Settings2 } from 'lucide-vue-next'
+import 'katex/dist/katex.min.css'
 import type { Draft } from '#shared/content'
 const route = useRoute(); const router = useRouter()
 const { data: records, refresh: refreshRecords, error: loadError } = await useAdminData<Draft[]>('/api/admin/content', [])

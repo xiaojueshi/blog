@@ -28,7 +28,23 @@ openssl rand -hex 32 | pnpm exec wrangler secret put ADMIN_SETUP_TOKEN --config 
 
 代码使用追加提交替换旧源码，保留旧版本分支与完整 Git 历史，不使用强制推送。Workers 控制台可回滚到历史部署；代码回滚不会回滚数据库。数据变更前下载完整 ZIP 或 JSON，导入采用只新增恢复；勿以重新部署代替数据备份。
 
-需要自定义域名时，在 Cloudflare 控制台为 Worker 添加域名，并确认域名由本人管理。当前默认使用 workers.dev，不改动旧站 DNS。
+当前 `wrangler.jsonc` 同时声明根域与 `www` 两个 Workers 自定义域名，再运行 `pnpm deploy:cloudflare` 即可。Cloudflare 会自动创建 DNS 记录并签发证书；绑定前必须移除同名旧记录，避免旧站点继续占用。规范域名是 `https://www.xiaojueshi.top`，根域请求由应用中间件 301 到该地址；`workers.dev` 地址保留为回退入口，不对外作为主域名。
+
+## SEO、缓存与域名跳转
+
+公开页会输出 canonical、Open Graph、Twitter 卡片、JSON-LD，并由 `/sitemap.xml` 汇总页面、文章与知识库目录；`/robots.txt` 禁止抓取 `/admin` 与 `/api/` 并声明 sitemap。知识库条目与文章内容相同时，canonical 指向文章主 URL，避免重复内容竞争。部署后请访问以下地址确认实际响应：
+
+- `https://www.xiaojueshi.top/robots.txt`
+- `https://www.xiaojueshi.top/sitemap.xml`
+- `https://www.xiaojueshi.top/articles/markdown-guide`
+
+Cloudflare 的 Managed robots.txt / Content Signals 功能可能覆盖源站 `robots.txt`。如果线上只看到 Cloudflare 注释而没有 `User-agent` 与 `Sitemap`，请在 Cloudflare 控制台关闭该托管规则，或确认它与源站文件合并后仍保留上述指令。提交搜索引擎前，先在 Google Search Console、Bing Webmaster Tools 与百度站长平台验证站点并提交 sitemap。
+
+公开 HTML 已发送 `max-age=0`、`s-maxage=300`、`stale-while-revalidate=86400` 与 `CDN-Cache-Control`。`cloudflare/worker.js` 通过 Workers Cache API 缓存 `/`、`/articles*`、`/garden*`、`/projects`、`/about`、`/rss.xml`、`/sitemap.xml` 的成功 GET 响应；响应头 `x-xjs-cache` 会显示 `HIT` 或 `MISS`。Workers 自定义域名不会自动用 Zone Cache Rules 缓存 Worker 直接生成的响应，因此代码层缓存是实际生效路径；发布新内容后最多等待 5 分钟。浏览器的 `max-age=0` 依赖 Cloudflare 的 Browser Cache TTL 设置为“遵循现有标头”，避免命中响应被统一改写为 4 小时。管理页和后台接口保持 `private, no-store`，不会进入缓存。
+
+`server/middleware/canonical-host.ts` 会把 `http://` 与 `xiaojueshi.top` 的请求 301 到规范地址。根域与 `www` 都绑定到同一个 Worker，并建议开启 Always Use HTTPS 处理协议跳转。若更换主域名，构建时设置 `NUXT_PUBLIC_SITE_URL`，并同步更新 `public/robots.txt` 中的 sitemap 地址。
+
+`server/middleware/legacy-redirects.ts` 会兼容旧 Astro 站点的公开入口：`/zh/`、`/blog/`、`/zh/blog/` 分别 301 到 `/`、`/articles`、`/articles`，`/zh/blog/markdown-style-guide/` 301 到 `/articles/markdown-guide`。规则仅匹配这些已知路径，不会把旧站未知文章误映射到新站；如果旧站还有真实文章，应先导出完整 URL 与正文，再逐篇建立映射。
 
 ## 本地 Workers 验收
 

@@ -7,6 +7,6 @@ import { searchContent } from '../../../shared/content'
  */
 export default defineEventHandler(event => {
   const query = getQuery(event)
-  setHeader(event, 'Cache-Control', 'no-store')
+  setHeader(event, 'Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300')
   return searchContent(publishedContent(), String(query.q || ''), String(query.category || ''))
 })

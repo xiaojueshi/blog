@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { renderMarkdown } from '#shared/markdown'
-const props = defineProps<{ source: string }>()
-const html = ref('')
+const props = defineProps<{ source: string; initialHtml?: string; live?: boolean }>()
+const html = ref(props.initialHtml || '')
 const renderKey = ref(0)
 const { isDark } = useTheme()
 const root = ref<HTMLElement>()
 let version = 0
 async function update() {
+  if (!props.live && props.initialHtml && html.value) return
   const current = ++version
+  const { renderMarkdown } = await import('#shared/markdown')
   const result = await renderMarkdown(props.source)
   if (current !== version) return
   html.value = result; renderKey.value++
@@ -27,8 +28,16 @@ async function diagrams() {
     }
   } catch { /* 图表模块不可用时保留可读源码。 */ }
 }
-await update()
-watch([() => props.source, isDark], update)
-onMounted(diagrams)
+if (!props.initialHtml) await update()
+watch(() => props.initialHtml, async value => {
+  if (!value || props.live) return
+  version++
+  html.value = value
+  renderKey.value++
+  await nextTick()
+  await diagrams()
+})
+watch([() => props.source, isDark], () => { if (props.live || !props.initialHtml) void update() })
+onMounted(async () => { await nextTick(); await diagrams() })
 </script>
 <template><div :key="renderKey" ref="root" class="prose" v-html="html" /></template>
