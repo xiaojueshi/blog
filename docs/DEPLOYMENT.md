@@ -40,7 +40,9 @@ openssl rand -hex 32 | pnpm exec wrangler secret put ADMIN_SETUP_TOKEN --config 
 
 Cloudflare 的 Managed robots.txt / Content Signals 功能可能覆盖源站 `robots.txt`。如果线上只看到 Cloudflare 注释而没有 `User-agent` 与 `Sitemap`，请在 Cloudflare 控制台关闭该托管规则，或确认它与源站文件合并后仍保留上述指令。提交搜索引擎前，先在 Google Search Console、Bing Webmaster Tools 与百度站长平台验证站点并提交 sitemap。
 
-公开 HTML 已发送 `max-age=0`、`s-maxage=300`、`stale-while-revalidate=86400` 与 `CDN-Cache-Control`。`cloudflare/worker.js` 通过 Workers Cache API 缓存 `/`、`/articles*`、`/garden*`、`/projects`、`/about`、`/rss.xml`、`/sitemap.xml` 的成功 GET 响应；响应头 `x-xjs-cache` 会显示 `HIT` 或 `MISS`。Workers 自定义域名不会自动用 Zone Cache Rules 缓存 Worker 直接生成的响应，因此代码层缓存是实际生效路径；发布新内容后最多等待 5 分钟。浏览器的 `max-age=0` 依赖 Cloudflare 的 Browser Cache TTL 设置为“遵循现有标头”，避免命中响应被统一改写为 4 小时。管理页和后台接口保持 `private, no-store`，不会进入缓存。
+公开 HTML 已发送 `max-age=60`、`s-maxage=600`、`stale-while-revalidate=86400` 与 `CDN-Cache-Control`。`cloudflare/worker.js` 通过 Workers Cache API 缓存 `/`、`/articles*`、`/garden*`、`/projects`、`/about`、`/rss.xml`、`/sitemap.xml` 的成功 GET 响应；响应头 `x-xjs-cache` 会显示 `HIT` 或 `MISS`。Workers 自定义域名不会自动用 Zone Cache Rules 缓存 Worker 直接生成的响应，因此代码层缓存是实际生效路径；发布或撤回内容后最多等待 10 分钟。公开图片只使用浏览器 5 分钟私有缓存，不进入边缘缓存，以保证撤回后立即失效。浏览器缓存依赖 Cloudflare 的 Browser Cache TTL 设置为“遵循现有标头”，避免命中响应被统一改写为 4 小时。管理页、草稿附件和后台接口保持 `private, no-store`，不会进入缓存。
+
+不建议接入第三方“Cloudflare 优选 IP”或不明来源的 CNAME 加速：这些 IP 通常按单一网络测速得出，无法覆盖不同省份、运营商和时段，也会让流量经过不受控的中间层。Cloudflare 官方的大陆网络需要企业方案与 ICP 备案；免费版只能通过缓存和换接入点缓解。
 
 `server/middleware/canonical-host.ts` 会把 `http://` 与 `xiaojueshi.top` 的请求 301 到规范地址。根域与 `www` 都绑定到同一个 Worker，并建议开启 Always Use HTTPS 处理协议跳转。若更换主域名，构建时设置 `NUXT_PUBLIC_SITE_URL`，并同步更新 `public/robots.txt` 中的 sitemap 地址。
 

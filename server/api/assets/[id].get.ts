@@ -9,10 +9,14 @@ export default defineEventHandler(event => {
   const id = getRouterParam(event, 'id') || ''
   const asset = database().prepare('SELECT * FROM assets WHERE id = ?').get(id) as { data: string; mime: string; content_id: string } | undefined
   const draft = asset && getDraft(asset.content_id)
+  // 只有已公开正文引用的附件才允许进入公共缓存；草稿和后台预览仍保持私有。
+  const publicAsset = Boolean(asset && draft && draft.visibility === 'public' && draft.published?.body.includes(`/api/assets/${id}`))
   // 即使所属内容已公开，新编辑稿中的附件也不能提前泄露。
-  if (!asset || !draft || (!isAdmin(event) && !(draft.visibility === 'public' && draft.published?.body.includes(`/api/assets/${id}`)))) throw createError({ statusCode: 404 })
+  if (!asset || !draft || (!isAdmin(event) && !publicAsset)) throw createError({ statusCode: 404 })
   setHeader(event, 'Content-Type', asset.mime)
-  setHeader(event, 'Cache-Control', 'private, no-store')
+  // 撤回文章需要立即失效，因此公开图片只进入浏览器私有缓存，不进入边缘缓存。
+  setHeader(event, 'Cache-Control', publicAsset ? 'private, max-age=300' : 'private, no-store')
+  setHeader(event, 'CDN-Cache-Control', 'no-store')
   setHeader(event, 'X-Content-Type-Options', 'nosniff')
   return Buffer.from(asset.data, 'base64')
 })

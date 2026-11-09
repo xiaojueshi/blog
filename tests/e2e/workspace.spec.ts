@@ -1,6 +1,74 @@
 import { test, expect } from '@playwright/test'
+import { Client } from '@modelcontextprotocol/sdk/client/index.js'
+import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
+import { createBlogServer } from '../../mcp/server.mjs'
 const origin = 'http://127.0.0.1:3100'
 const password = 'test-only-xiaojueshi-2026'
+test('Agent 凭据独立授权，发布保留版本并可立即撤销', async ({ page, request }) => {
+  const headers = { origin }
+  expect((await page.request.post('/api/auth', { headers, data: { password } })).ok()).toBeTruthy()
+  const created = await page.request.post('/api/admin/agent-credentials', { headers, data: { action: 'create', name: '隔离测试', scopes: ['content:read', 'content:write', 'content:publish', 'taxonomy:write'] } })
+  expect(created.ok()).toBeTruthy()
+  const { credential, token } = await created.json()
+  const agentHeaders = { authorization: `Bearer ${token}` }
+  const workspace = await request.get('/api/agent/workspace', { headers: agentHeaders }).then(response => response.json())
+  expect(workspace.terms.length).toBeGreaterThan(0)
+  expect(workspace.settings).toBeUndefined()
+  expect(workspace.bases).toBeUndefined()
+  expect((await request.get('/api/admin/content', { headers: agentHeaders })).status()).toBe(401)
+  expect((await request.post('/api/admin/settings', { headers: { ...agentHeaders, origin }, data: {} })).status()).toBe(401)
+  expect((await request.get('/api/admin/backup', { headers: agentHeaders })).status()).toBe(401)
+
+  const savedResponse = await request.post('/api/agent/content', { headers: agentHeaders, data: { revision: 0, title: 'Agent 隔离测试', body: '原始正文', categoryId: null, tagIds: [] } })
+  expect(savedResponse.ok()).toBeTruthy()
+  const saved = await savedResponse.json()
+  expect(saved.visibility).toBe('private')
+  expect((await request.get(`/api/content/${saved.slug}`)).status()).toBe(404)
+  const publishedResponse = await request.post('/api/agent/content', { headers: agentHeaders, data: { id: saved.id, revision: saved.revision, workspaceRevision: workspace.revision, action: 'publish', body: '不应覆盖正文' } })
+  expect(publishedResponse.ok()).toBeTruthy()
+  const published = await publishedResponse.json()
+  expect(published.published.body).toBe('原始正文')
+  const stale = await request.post('/api/agent/content', { headers: agentHeaders, data: { id: saved.id, revision: saved.revision, action: 'save', body: '过期修改' } })
+  expect(stale.status()).toBe(409)
+  expect((await request.get(`/api/content/${saved.slug}`).then(response => response.json())).body).toBe('原始正文')
+
+  const readOnly = await page.request.post('/api/admin/agent-credentials', { headers, data: { action: 'create', name: '仅读测试', scopes: ['content:read'] } }).then(response => response.json())
+  expect((await request.post('/api/agent/content', { headers: { authorization: `Bearer ${readOnly.token}` }, data: { revision: 0, title: '无权写入', body: '正文' } })).status()).toBe(403)
+  const backup = await page.request.get('/api/admin/backup').then(response => response.text())
+  expect(backup).not.toContain(token)
+  expect(backup).not.toContain(readOnly.token)
+  const mcpServer = createBlogServer({ request: async (_environment: string, path: string, options: { method?: string; body?: unknown } = {}) => {
+    const response = options.method === 'POST' ? await request.post(path, { headers: agentHeaders, data: options.body }) : await request.get(path, { headers: agentHeaders })
+    if (!response.ok()) throw new Error(`Agent API 返回 ${response.status()}`)
+    return response.json()
+  } })
+  const mcpClient = new Client({ name: 'e2e-client', version: '1.0.0' })
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
+  await Promise.all([mcpServer.connect(serverTransport), mcpClient.connect(clientTransport)])
+  try {
+    const call = async (name: string, args: Record<string, unknown>) => {
+      const response = await mcpClient.callTool({ name, arguments: args })
+      expect(response.isError).not.toBe(true)
+      return JSON.parse((response.content as { type: string; text: string }[])[0]!.text)
+    }
+    const mcpDraft = await call('blog_save_draft', { environment: 'local', revision: 0, title: 'MCP 完整链路', body: 'MCP 编辑稿正文' })
+    expect(mcpDraft.content.visibility).toBe('private')
+    const preview = await call('blog_prepare_content_action', { environment: 'local', id: mcpDraft.content.id, action: 'publish' })
+    expect(preview.changes.body.after).toBe('MCP 编辑稿正文')
+    const confirmed = await call('blog_confirm_action', { planId: preview.planId, confirmedByUser: true })
+    expect(confirmed.result.published.body).toBe('MCP 编辑稿正文')
+  } finally { await mcpClient.close(); await mcpServer.close() }
+  expect((await page.request.post('/api/admin/agent-credentials', { headers, data: { action: 'revoke', id: credential.id } })).ok()).toBeTruthy()
+  expect((await request.get('/api/agent/content', { headers: agentHeaders })).status()).toBe(401)
+  await page.goto('/admin/settings?tab=data')
+  await page.locator('[data-app-ready="true"]').waitFor()
+  await expect(page.getByRole('heading', { name: 'Agent 凭据' })).toBeVisible()
+  await page.getByLabel('凭据名称').fill('界面测试设备')
+  await page.getByRole('button', { name: '创建凭据' }).click()
+  await expect(page.getByLabel('凭据', { exact: true })).toHaveValue(/^xjs_[A-Za-z0-9_-]{43}$/)
+  await page.getByRole('button', { name: '我已保存' }).click()
+  await expect(page.getByLabel('凭据', { exact: true })).toHaveCount(0)
+})
 test('写作、自动保存、发布、隔离、撤回与备份恢复', async ({ page, request, playwright }, testInfo) => {
   expect((await request.get('/api/admin/content')).status()).toBe(401)
   await page.goto('/admin')
@@ -138,4 +206,179 @@ test('SSR 在禁用 JavaScript 时仍可阅读，减少动效时保留内容', a
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
   await expect(page.getByRole('link', { name: '开始阅读', exact: true })).toBeVisible()
+})
+
+test('文章跳转先显示正文骨架，并在数据到达后显示内容', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 1440, height: 960 })
+  await page.goto('/articles')
+  await page.locator('[data-app-ready="true"]').waitFor()
+  await page.clock.install()
+  let release!: () => void
+  const gate = new Promise<void>(resolve => { release = resolve })
+  await page.route('**/api/content/quiet-design', async route => { await gate; await route.continue() })
+  try {
+    await page.getByRole('link', { name: /好的界面，是让复杂消失/ }).click({ noWaitAfter: true })
+    await page.clock.fastForward(200)
+    const skeleton = page.locator('[data-skeleton="article"]')
+    await expect(skeleton).toBeVisible()
+    await expect(page.locator('.navigation-loading')).toHaveCount(0)
+    await expect(page.getByRole('heading', { name: '好的界面，是让复杂消失', exact: true })).toHaveCount(0)
+    await expect(page.getByText('内容可能尚未公开，或者链接已经改变。')).toHaveCount(0)
+    await page.screenshot({ path: testInfo.outputPath('article-skeleton-light-desktop.png') })
+    await page.setViewportSize({ width: 390, height: 844 })
+    await expect(skeleton).toBeVisible()
+    await page.getByLabel('主题设置').first().click()
+    await page.locator('.theme-popover:visible').getByRole('button', { name: '深色', exact: true }).click()
+    await page.clock.fastForward(200)
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+    await page.screenshot({ path: testInfo.outputPath('article-skeleton-dark-mobile.png') })
+    await page.setViewportSize({ width: 320, height: 844 })
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await expect(skeleton).toBeVisible()
+    await expect(skeleton.locator('.skeleton-block').first()).toHaveCSS('animation-name', 'none')
+    await page.screenshot({ path: testInfo.outputPath('article-skeleton-reduced-motion.png') })
+    await page.clock.fastForward(10000)
+    await expect(skeleton).toContainText('加载较慢')
+  } finally { release() }
+  await expect(page.getByRole('heading', { name: '好的界面，是让复杂消失', exact: true })).toBeVisible()
+  await page.clock.fastForward(200)
+  await expect(page.locator('[data-skeleton="article"]')).toHaveCount(0)
+})
+
+test('页面框架等待时显示遮罩并可安全返回', async ({ page }, testInfo) => {
+  expect((await page.request.post('/api/auth', { headers: { origin }, data: { password } })).ok()).toBeTruthy()
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/about')
+  await page.locator('[data-app-ready="true"]').waitFor()
+  await page.getByLabel('主题设置').first().click()
+  await page.locator('.theme-popover:visible').getByRole('button', { name: '深色', exact: true }).click()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+  await page.clock.install()
+  let release!: () => void
+  const gate = new Promise<void>(resolve => { release = resolve })
+  await page.route('**/api/auth', async route => { if (route.request().method() === 'GET') await gate; await route.continue().catch(() => {}) })
+  try {
+    await page.getByRole('link', { name: '工作台', exact: true }).click({ noWaitAfter: true })
+    await page.clock.fastForward(250)
+    const overlay = page.getByRole('dialog', { name: '页面加载中…' })
+    await expect(overlay).toBeVisible()
+    const back = overlay.getByRole('button', { name: '返回上一页' })
+    await expect(back).toBeFocused()
+    await page.clock.fastForward(200)
+    await expect(overlay).toHaveCSS('opacity', '1')
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await page.screenshot({ path: testInfo.outputPath('navigation-overlay-dark-mobile.png') })
+    await page.keyboard.press('Tab')
+    await expect(back).toBeFocused()
+    await page.clock.fastForward(10000)
+    await expect(page.locator('.navigation-loading')).toContainText('加载较慢')
+    await page.keyboard.press('Escape')
+    await page.clock.fastForward(200)
+    await expect(page).toHaveURL(/\/about$/)
+    await expect(page.locator('.navigation-loading')).toHaveCount(0)
+  } finally { release() }
+  await expect(page.getByRole('heading', { name: /我是 xiaojueshi/ })).toBeVisible()
+})
+
+test('文章列表等待数据时显示骨架而不是空结果', async ({ page }, testInfo) => {
+  await page.goto('/about')
+  await page.locator('[data-app-ready="true"]').waitFor()
+  let release!: () => void
+  const gate = new Promise<void>(resolve => { release = resolve })
+  await page.route('**/api/content', async route => { await gate; await route.continue() })
+  try {
+    await page.getByRole('navigation', { name: '主导航' }).getByRole('link', { name: '文章', exact: true }).click()
+    await expect(page.locator('[data-skeleton="article-list"]')).toBeVisible()
+    await expect(page.getByRole('heading', { name: '暂时没有找到记录' })).toHaveCount(0)
+    await expect(page.locator('.navigation-loading')).toHaveCount(0)
+    await page.screenshot({ path: testInfo.outputPath('article-list-skeleton-desktop.png') })
+  } finally { release() }
+  await expect(page.getByRole('heading', { name: '好的界面，是让复杂消失', exact: true })).toBeVisible()
+})
+
+test('首页各内容区等待数据时分别显示骨架', async ({ page }, testInfo) => {
+  await page.goto('/about')
+  await page.locator('[data-app-ready="true"]').waitFor()
+  let release!: () => void
+  const gate = new Promise<void>(resolve => { release = resolve })
+  await page.route('**/api/content', async route => { await gate; await route.continue() })
+  await page.route('**/api/knowledge', async route => { await gate; await route.continue() })
+  try {
+    await page.getByRole('link', { name: 'XIAOJUESHI 首页' }).click()
+    await expect(page.locator('[data-skeleton="featured"]')).toBeVisible()
+    await expect(page.locator('[data-skeleton="article-list"]')).toBeVisible()
+    await expect(page.locator('[data-skeleton="home-knowledge"]')).toBeVisible()
+    await expect(page.getByText('暂无公开记录。')).toHaveCount(0)
+    await page.screenshot({ path: testInfo.outputPath('home-skeleton-desktop.png'), fullPage: true })
+  } finally { release() }
+  await expect(page.locator('[data-skeleton]')).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: '最近记录' })).toBeVisible()
+})
+
+test('知识库等待数据时显示目录与正文骨架', async ({ page }) => {
+  await page.goto('/articles')
+  await page.locator('[data-app-ready="true"]').waitFor()
+  let release!: () => void
+  const gate = new Promise<void>(resolve => { release = resolve })
+  await page.route(/\/api\/knowledge\?html=1$/, async route => { await gate; await route.continue() })
+  try {
+    await page.getByRole('navigation', { name: '主导航' }).getByRole('link', { name: '知识库', exact: true }).click()
+    await expect(page.locator('[data-skeleton="knowledge"]')).toBeVisible()
+    await expect(page.getByText('暂时没有公开知识库。')).toHaveCount(0)
+  } finally { release() }
+  await expect(page.getByLabel('选择知识库', { exact: true }).first()).toBeVisible()
+})
+
+test('文章请求失败显示错误并可重新加载', async ({ page }) => {
+  await page.goto('/articles')
+  await page.locator('[data-app-ready="true"]').waitFor()
+  await page.route('**/api/content/quiet-design', route => route.fulfill({ status: 503, body: '暂时不可用' }))
+  await page.getByRole('link', { name: /好的界面，是让复杂消失/ }).click()
+  await expect(page.getByText('页面加载失败，请检查网络后重试。')).toBeVisible()
+  await expect(page.getByText('内容可能尚未公开，或者链接已经改变。')).toHaveCount(0)
+  await page.unroute('**/api/content/quiet-design')
+  await page.getByRole('button', { name: '重新加载' }).click()
+  await expect(page.getByRole('heading', { name: '好的界面，是让复杂消失', exact: true })).toBeVisible()
+  const missing = await page.goto('/articles/does-not-exist')
+  expect(missing?.status()).toBe(404)
+  await expect(page.getByText('内容可能尚未公开，或者链接已经改变。')).toBeVisible()
+})
+
+test('站内跳转遇到 404 时结束骨架并显示内容不存在', async ({ page }) => {
+  await page.goto('/articles')
+  await page.locator('[data-app-ready="true"]').waitFor()
+  await page.route('**/api/content/quiet-design', route => route.fulfill({ status: 404, body: '不存在' }))
+  await page.getByRole('link', { name: /好的界面，是让复杂消失/ }).click()
+  await expect(page.locator('[data-skeleton="article"]')).toHaveCount(0)
+  await expect(page.getByText('内容可能尚未公开，或者链接已经改变。')).toBeVisible()
+  await expect(page.getByRole('button', { name: '重新加载' })).toHaveCount(0)
+})
+
+test('文章列表加载失败不显示为空，重试后恢复内容', async ({ page }) => {
+  await page.goto('/about')
+  await page.locator('[data-app-ready="true"]').waitFor()
+  await page.route('**/api/content', route => route.fulfill({ status: 503, body: '暂时不可用' }))
+  await page.getByRole('navigation', { name: '主导航' }).getByRole('link', { name: '文章', exact: true }).click()
+  await expect(page.getByRole('alert')).toContainText('文章加载失败')
+  await expect(page.getByRole('heading', { name: '暂时没有找到记录' })).toHaveCount(0)
+  await page.unroute('**/api/content')
+  await page.getByRole('button', { name: '重新加载' }).click()
+  await expect(page.getByRole('heading', { name: '好的界面，是让复杂消失', exact: true })).toBeVisible()
+})
+
+test('慢页面跳转被新跳转替代后不残留加载状态', async ({ page }) => {
+  await page.goto('/articles')
+  await page.locator('[data-app-ready="true"]').waitFor()
+  let release!: () => void
+  const gate = new Promise<void>(resolve => { release = resolve })
+  await page.route('**/api/content/quiet-design', async route => { await gate; await route.continue().catch(() => {}) })
+  try {
+    await page.getByRole('link', { name: /好的界面，是让复杂消失/ }).click({ noWaitAfter: true })
+    await expect(page.locator('[data-skeleton="article"]')).toBeVisible()
+    await page.getByRole('navigation', { name: '主导航' }).getByRole('link', { name: '关于', exact: true }).click()
+    await expect(page).toHaveURL(/\/about$/)
+    await expect(page.getByRole('heading', { name: /我是 xiaojueshi/ })).toBeVisible()
+    await expect(page.locator('.navigation-loading')).toHaveCount(0)
+  } finally { release() }
+  await expect(page.getByRole('heading', { name: /我是 xiaojueshi/ })).toBeVisible()
 })

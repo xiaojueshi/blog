@@ -10,6 +10,180 @@ async function ready(page: Page, path: string) { await page.goto(path); await pa
 async function term(page: Page, kind: string, name: string) { const w=await state(page);const r=await page.request.post('/api/admin/terms',{headers,data:{revision:w.revision,action:'create',kind,name}});expect(r.ok()).toBeTruthy();return (await r.json()).workspace.terms.find((t: any)=>t.kind===kind&&t.name===name) }
 async function createContent(page: Page, values: object): Promise<Draft> { const r=await page.request.post('/api/admin/content',{headers,data:{title:`管理测试-${Date.now()}`,body:'# 正文\n\n这是管理功能验收。',kind:'note',revision:0,...values}});expect(r.ok()).toBeTruthy();return r.json() }
 async function setTheme(page: Page, theme: string) { await page.getByLabel('主题设置').last().click(); await page.locator('.theme-popover:visible').getByRole('button',{name:theme,exact:true}).click() }
+async function selectField(page: Page, label: string, value: string) { await page.getByRole('combobox', { name: label, exact: true }).click(); await page.locator(`.app-select-menu [role="option"][data-value="${value}"]`).click() }
+
+test('后台自定义下拉可展开、选择并关闭', async ({ page }, testInfo) => {
+  await login(page)
+  await ready(page, '/admin/write')
+  const trigger = page.getByRole('combobox', { name: '内容类型', exact: true })
+  await trigger.click()
+  await expect(page.getByRole('listbox', { name: '内容类型选项', exact: true })).toBeVisible()
+  await expect.poll(() => page.locator('.app-select-menu').evaluate(element => getComputedStyle(element).opacity)).toBe('1')
+  await page.screenshot({ path: testInfo.outputPath('admin-select-open.png'), fullPage: true })
+  await page.getByRole('option', { name: '随笔', exact: true }).click()
+  await expect(trigger).toHaveAttribute('data-value', 'thought')
+  await expect(page.getByRole('listbox')).toHaveCount(0)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await trigger.click()
+  await expect(page.getByRole('listbox', { name: '内容类型选项', exact: true })).toBeVisible()
+  await expect(page.locator('.app-select-menu')).toBeInViewport()
+  await expect.poll(() => page.locator('.app-select-menu').evaluate(element => getComputedStyle(element).opacity)).toBe('1')
+  await page.screenshot({ path: testInfo.outputPath('admin-select-open-mobile.png') })
+  await trigger.press('Escape')
+  await expect(page.getByRole('listbox')).toHaveCount(0)
+})
+
+test('后台内容和附件等待数据时显示对应骨架', async ({ page }, testInfo) => {
+  await login(page)
+  await ready(page, '/about')
+  let releaseContent!: () => void
+  const contentGate = new Promise<void>(resolve => { releaseContent = resolve })
+  await page.route('**/api/admin/content', async route => { await contentGate; await route.continue().catch(() => {}) })
+  try {
+    await page.getByRole('link', { name: '工作台', exact: true }).click()
+    await expect(page.locator('[data-skeleton="admin-content"]')).toBeVisible()
+    await expect(page.getByRole('heading', { name: '暂无内容' })).toHaveCount(0)
+    await page.screenshot({ path: testInfo.outputPath('admin-content-skeleton-desktop.png') })
+  } finally { releaseContent() }
+  await expect(page.locator('[data-skeleton="admin-content"]')).toHaveCount(0)
+  await page.unroute('**/api/admin/content')
+  let releaseAssets!: () => void
+  const assetGate = new Promise<void>(resolve => { releaseAssets = resolve })
+  await page.route('**/api/admin/assets', async route => { await assetGate; await route.continue() })
+  try {
+    await page.locator('.workspace-sidebar').getByRole('link', { name: '附件', exact: true }).click()
+    await expect(page.locator('[data-skeleton="assets"]')).toBeVisible()
+    await expect(page.getByRole('heading', { name: '暂无附件' })).toHaveCount(0)
+  } finally { releaseAssets() }
+  await expect(page.locator('[data-skeleton="assets"]')).toHaveCount(0)
+})
+
+test('后台知识库等待共享数据时显示骨架', async ({ page }) => {
+  await login(page)
+  await ready(page, '/about')
+  let release!: () => void
+  const gate = new Promise<void>(resolve => { release = resolve })
+  await page.route('**/api/admin/workspace', async route => { await gate; await route.continue().catch(() => {}) })
+  try {
+    await page.getByRole('link', { name: '工作台', exact: true }).click()
+    await expect(page.locator('[data-skeleton="admin-content"]')).toBeVisible()
+    await page.locator('.workspace-sidebar').getByRole('link', { name: '知识库', exact: true }).click()
+    await expect(page.locator('[data-skeleton="admin-knowledge"]')).toBeVisible()
+    await expect(page.getByRole('heading', { name: '创建你的第一个知识库' })).toHaveCount(0)
+  } finally { release() }
+  await expect(page.locator('[data-skeleton="admin-knowledge"]')).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: '知识库', exact: true })).toBeVisible()
+})
+
+test('附件列表加载失败后可重试，不误显示空状态', async ({ page }) => {
+  await login(page)
+  await ready(page, '/admin')
+  await page.route('**/api/admin/assets', route => route.fulfill({ status: 503, body: '暂时不可用' }))
+  await page.locator('.workspace-sidebar').getByRole('link', { name: '附件', exact: true }).click()
+  await expect(page.getByRole('alert')).toContainText('加载失败')
+  await expect(page.getByRole('heading', { name: '暂无附件' })).toHaveCount(0)
+  await page.unroute('**/api/admin/assets')
+  await page.getByRole('button', { name: '重试', exact: true }).click()
+  await expect(page.getByRole('alert')).toHaveCount(0)
+  await expect(page.locator('[data-skeleton="assets"]')).toHaveCount(0)
+})
+
+test('后台会话未确认时不显示私人内容或后台骨架', async ({ page }) => {
+  await login(page)
+  const draft = await createContent(page, { title: `私人鉴权骨架-${Date.now()}` })
+  expect((await page.request.delete('/api/auth', { headers })).ok()).toBeTruthy()
+  await ready(page, '/about')
+  let release!: () => void
+  const gate = new Promise<void>(resolve => { release = resolve })
+  await page.route('**/api/auth', async route => { if (route.request().method() === 'GET') await gate; await route.continue().catch(() => {}) })
+  try {
+    await page.getByRole('link', { name: '工作台', exact: true }).click({ noWaitAfter: true })
+    await expect(page.locator('.navigation-loading')).toBeVisible()
+    await expect(page.getByText(draft.title, { exact: true })).toHaveCount(0)
+    await expect(page.locator('[data-skeleton="admin-content"]')).toHaveCount(0)
+  } finally { release() }
+  await expect(page.getByLabel('管理员密码')).toBeVisible()
+  await expect(page.getByText(draft.title, { exact: true })).toHaveCount(0)
+})
+
+test('图片上传显示状态、防止重复操作并在离开时提醒', async ({ page }, testInfo) => {
+  await login(page)
+  const draft = await createContent(page, { title: `上传反馈-${Date.now()}` })
+  await ready(page, `/admin/write?id=${draft.id}`)
+  await page.setViewportSize({ width: 320, height: 844 })
+  await expect.poll(() => page.locator('.workspace-sidebar').evaluate(element => element.getBoundingClientRect().right)).toBeLessThanOrEqual(0)
+  let release!: () => void
+  const gate = new Promise<void>(resolve => { release = resolve })
+  await page.route('**/api/admin/upload', async route => { await gate; await route.continue() })
+  try {
+    await page.locator('input[type="file"]').setInputFiles({ name: 'loading-test.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aH0sAAAAASUVORK5CYII=', 'base64') })
+    await expect(page.getByText('正在上传…', { exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: '上传图片' })).toBeDisabled()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBeFalsy()
+    await page.screenshot({ path: testInfo.outputPath('upload-loading-mobile.png') })
+    page.once('dialog', dialog => dialog.dismiss())
+    await page.locator('.editor-topbar').getByRole('link', { name: '全部内容' }).click()
+    await expect(page).toHaveURL(new RegExp(`/admin/write\\?id=${draft.id}`))
+    await expect(page.locator('.navigation-loading')).toHaveCount(0)
+  } finally { release() }
+  await expect(page.getByLabel('Markdown 正文')).toContainText('loading-test.png')
+  await expect(page.getByRole('button', { name: '上传图片' })).toBeEnabled()
+  await expect(page.getByRole('status').filter({ hasText: '所有更改已保存' })).toBeVisible()
+})
+
+test('历史版本读取失败后显示提示并可重试', async ({ page }) => {
+  await login(page)
+  const draft = await createContent(page, { title: `历史反馈-${Date.now()}` })
+  await ready(page, `/admin/write?id=${draft.id}`)
+  let release!: () => void
+  const gate = new Promise<void>(resolve => { release = resolve })
+  await page.route('**/api/admin/history**', async route => { await gate; await route.fulfill({ status: 503, body: '暂时不可用' }) })
+  try {
+    await page.getByRole('button', { name: '查看历史版本' }).click()
+    await expect(page.getByText('正在加载历史…')).toBeVisible()
+    await expect(page.getByRole('button', { name: '查看历史版本' })).toBeDisabled()
+  } finally { release() }
+  await expect(page.getByRole('status').filter({ hasText: '历史版本加载失败' })).toBeVisible()
+  await page.unroute('**/api/admin/history**')
+  await page.getByRole('button', { name: '查看历史版本' }).click()
+  await expect(page.getByRole('heading', { name: '历史版本' })).toBeVisible()
+})
+
+test('导入预览进行中离开页面会提醒并保留结果', async ({ page }) => {
+  await login(page)
+  await ready(page, '/admin/settings?tab=data')
+  await page.getByLabel('选择导入文件').setInputFiles({ name: 'loading-import.md', mimeType: 'text/markdown', buffer: Buffer.from('# 导入反馈测试\n\n内容') })
+  let release!: () => void
+  const gate = new Promise<void>(resolve => { release = resolve })
+  await page.route('**/api/admin/import', async route => { await gate; await route.continue() })
+  try {
+    await page.getByRole('button', { name: '预览导入结果' }).click()
+    await expect(page.getByRole('button', { name: '正在预览…' })).toBeDisabled()
+    page.once('dialog', dialog => dialog.dismiss())
+    await page.locator('.workspace-sidebar').getByRole('link', { name: '全部内容' }).click()
+    await expect(page).toHaveURL(/\/admin\/settings\?tab=data$/)
+  } finally { release() }
+  await expect(page.getByRole('heading', { name: '确认导入计划' })).toBeVisible()
+})
+
+test('批量操作进行中筛选内容仍保留等待提示', async ({ page }) => {
+  await login(page)
+  const draft = await createContent(page, { title: `批量反馈-${Date.now()}` })
+  await ready(page, '/admin')
+  await page.getByLabel(`选择${draft.title}`, { exact: true }).check()
+  await selectField(page, '批量操作', 'category')
+  let release!: () => void
+  const gate = new Promise<void>(resolve => { release = resolve })
+  await page.route('**/api/admin/bulk', async route => { await gate; await route.continue() })
+  try {
+    await page.getByRole('button', { name: '应用', exact: true }).click()
+    await expect(page.getByRole('button', { name: '正在应用…' })).toBeDisabled()
+    await page.getByLabel('搜索后台内容').fill('不匹配的内容')
+    await expect(page.getByRole('button', { name: '正在应用…' })).toBeVisible()
+    await expect(page.getByRole('button', { name: '取消选择' })).toBeDisabled()
+  } finally { release() }
+  await expect(page.getByRole('status').filter({ hasText: '已更新 1 项内容' })).toBeVisible()
+})
 
 test('分类改名与标签合并保持稳定关联，默认类型不能被停用', async ({ page }) => {
   await login(page)
@@ -27,7 +201,7 @@ test('分类改名与标签合并保持稳定关联，默认类型不能被停�
   await page.getByRole('tab',{name:'标签管理',exact:true}).click()
   const row=page.locator('.organization-row').filter({hasText:tagA.name})
   await row.getByRole('button',{name:'合并 / 移除',exact:true}).click()
-  await page.getByLabel('迁移目标').selectOption(tagB.id)
+  await selectField(page, '迁移目标', tagB.id)
   await page.getByRole('button',{name:'迁移关联并移除原项',exact:true}).click()
   await expect(page.locator('.notice[role="status"]')).toContainText('更新了')
   const after=await page.request.get('/api/admin/content').then(r=>r.json());const current=after.find((d: Draft)=>d.id===item.id)
@@ -35,7 +209,7 @@ test('分类改名与标签合并保持稳定关联，默认类型不能被停�
   const extra=await createContent(page,{title:`批量关联-${suffix}`})
   await ready(page,'/admin')
   await page.getByLabel(`选择${item.title}`,{exact:true}).check();await page.getByLabel(`选择${extra.title}`,{exact:true}).check()
-  await page.getByLabel('批量操作',{exact:true}).selectOption('category');await page.getByLabel('批量目标',{exact:true}).selectOption(category.id)
+  await selectField(page,'批量操作','category');await selectField(page,'批量目标',category.id)
   await page.getByRole('button',{name:'应用',exact:true}).click();await expect(page.locator('.notice[role="status"]')).toContainText('已更新 2 项')
   const bulkItems=await page.request.get('/api/admin/content').then(r=>r.json());const extraUpdated=bulkItems.find((d:Draft)=>d.id===extra.id)
   expect(extraUpdated.categoryId).toBe(category.id)
@@ -70,7 +244,7 @@ test('知识库支持章节、新建笔记与引用，公开目录隐藏私人�
   const chapterId=await page.locator('.directory-row.selected').getAttribute('class')
   expect(chapterId).toContain('selected')
   for(const contentId of ['quiet-design','edge-notes',privateNote.id]) {
-    await page.getByRole('button',{name:'收录内容',exact:true}).click();await page.getByLabel('收录内容',{exact:true}).selectOption(contentId);await page.getByRole('button',{name:'加入目录',exact:true}).click()
+    await page.getByRole('button',{name:'收录内容',exact:true}).click();await selectField(page,'收录内容',contentId);await page.getByRole('button',{name:'加入目录',exact:true}).click()
   }
   await page.locator('.base-properties summary').click();await page.getByLabel('知识库链接').fill(`handbook-${suffix}`)
   await page.getByRole('checkbox',{name:/公开知识库/}).check();await page.getByRole('button',{name:'保存目录',exact:true}).first().click()
@@ -110,10 +284,10 @@ test('设置保存实际生效，数据导入先预览后执行，导出包含�
   await page.getByLabel('站点名称',{exact:true}).fill('XIAOJUESHI TEST')
   await page.getByRole('button',{name:'保存设置',exact:true}).click();await expect(page.locator('.notice[role="status"]')).toContainText('设置已保存')
   expect((await state(page)).settings.name).toBe('XIAOJUESHI TEST')
-  await page.getByRole('tab',{name:'编辑与发布',exact:true}).click();await page.getByLabel('默认内容类型').selectOption('article');await page.getByLabel('自动保存间隔（秒）').fill('2')
+  await page.getByRole('tab',{name:'编辑与发布',exact:true}).click();await selectField(page,'默认内容类型','article');await page.getByLabel('自动保存间隔（秒）').fill('2')
   await page.getByRole('checkbox',{name:/显示阅读时长/}).uncheck();await page.getByRole('checkbox',{name:/代码块自动换行/}).check()
   await page.getByRole('button',{name:'保存设置',exact:true}).click();await expect(page.locator('.notice[role="status"]')).toContainText('设置已保存')
-  await ready(page,'/admin/write');await expect(page.getByLabel('内容类型')).toHaveValue('article')
+  await ready(page,'/admin/write');await expect(page.getByLabel('内容类型')).toHaveAttribute('data-value','article')
   await ready(page,'/articles');await expect(page.locator('.reading-time')).toHaveCount(0);await expect(page.locator('html')).toHaveAttribute('data-code-wrap','true')
   await ready(page,'/admin/settings?tab=data')
   const backup=await page.request.get('/api/admin/backup').then(r=>r.json())

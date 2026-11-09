@@ -10,7 +10,7 @@ import type { KnowledgeBase, SiteSettings, TaxonomyTerm } from '../../shared/wor
  * @throws 迁移失败时回滚并抛出异常。
  */
 export function initializeWorkspace(db: Omit<WorkspaceDatabase, 'transaction'> & Partial<Pick<WorkspaceDatabase, 'transaction'>>): void {
-  db.exec('CREATE TABLE IF NOT EXISTS taxonomy (id TEXT PRIMARY KEY, kind TEXT NOT NULL, data TEXT NOT NULL); CREATE TABLE IF NOT EXISTS knowledge (id TEXT PRIMARY KEY, data TEXT NOT NULL); CREATE TABLE IF NOT EXISTS operations (id TEXT PRIMARY KEY, data TEXT NOT NULL);')
+  db.exec('CREATE TABLE IF NOT EXISTS taxonomy (id TEXT PRIMARY KEY, kind TEXT NOT NULL, data TEXT NOT NULL); CREATE TABLE IF NOT EXISTS knowledge (id TEXT PRIMARY KEY, data TEXT NOT NULL); CREATE TABLE IF NOT EXISTS operations (id TEXT PRIMARY KEY, data TEXT NOT NULL); CREATE TABLE IF NOT EXISTS agent_credentials (id TEXT PRIMARY KEY, name TEXT NOT NULL, token_hash TEXT NOT NULL UNIQUE, scopes TEXT NOT NULL, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL, revoked_at INTEGER);')
   if (db.prepare('SELECT value FROM config WHERE key = ?').get('workspace-version')) return
   const migrate = () => {
     // 保留迁移前原始 JSON，使转换本身也可以追溯和恢复。

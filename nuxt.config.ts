@@ -9,8 +9,9 @@ const securityHeaders = {
 }
 const publicPageHeaders = {
   ...securityHeaders,
-  'cache-control': 'public, max-age=0, s-maxage=300, stale-while-revalidate=86400',
-  'cdn-cache-control': 'public, s-maxage=300, stale-while-revalidate=86400',
+  // 让回访优先使用浏览器缓存，同时把边缘缓存窗口延长到 10 分钟。
+  'cache-control': 'public, max-age=60, s-maxage=600, stale-while-revalidate=86400',
+  'cdn-cache-control': 'public, s-maxage=600, stale-while-revalidate=86400',
 }
 export default defineNuxtConfig({
   compatibilityDate: '2026-10-24',
@@ -34,6 +35,7 @@ export default defineNuxtConfig({
     '/admin': { headers: { ...securityHeaders, 'cache-control': 'private, no-store', 'x-robots-tag': 'noindex, nofollow' } },
     '/admin/**': { headers: { ...securityHeaders, 'cache-control': 'private, no-store', 'x-robots-tag': 'noindex, nofollow' } },
     '/api/admin/**': { headers: { ...securityHeaders, 'cache-control': 'private, no-store' } },
+    '/api/agent/**': { headers: { ...securityHeaders, 'cache-control': 'private, no-store' } },
     '/api/auth': { headers: { ...securityHeaders, 'cache-control': 'private, no-store' } },
     '/api/auth/**': { headers: { ...securityHeaders, 'cache-control': 'private, no-store' } },
   },
