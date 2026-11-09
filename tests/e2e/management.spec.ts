@@ -10,7 +10,13 @@ async function ready(page: Page, path: string) { await page.goto(path); await pa
 async function term(page: Page, kind: string, name: string) { const w=await state(page);const r=await page.request.post('/api/admin/terms',{headers,data:{revision:w.revision,action:'create',kind,name}});expect(r.ok()).toBeTruthy();return (await r.json()).workspace.terms.find((t: any)=>t.kind===kind&&t.name===name) }
 async function createContent(page: Page, values: object): Promise<Draft> { const r=await page.request.post('/api/admin/content',{headers,data:{title:`管理测试-${Date.now()}`,body:'# 正文\n\n这是管理功能验收。',kind:'note',revision:0,...values}});expect(r.ok()).toBeTruthy();return r.json() }
 async function setTheme(page: Page, theme: string) { await page.getByLabel('主题设置').last().click(); await page.locator('.theme-popover:visible').getByRole('button',{name:theme,exact:true}).click() }
-async function selectField(page: Page, label: string, value: string) { await page.getByRole('combobox', { name: label, exact: true }).click(); await page.locator(`.app-select-menu [role="option"][data-value="${value}"]`).click() }
+async function selectField(page: Page, label: string, value: string) {
+  const trigger = page.getByRole('combobox', { name: label, exact: true })
+  await trigger.click()
+  const listboxId = await trigger.getAttribute('aria-controls')
+  if (!listboxId) throw new Error(`下拉框 ${label} 缺少 aria-controls`)
+  await page.locator(`[id="${listboxId}"] [role="option"][data-value="${value}"]`).click()
+}
 
 test('后台自定义下拉可展开、选择并关闭', async ({ page }, testInfo) => {
   await login(page)
@@ -297,7 +303,7 @@ test('设置保存实际生效，数据导入先预览后执行，导出包含�
   await page.getByRole('button',{name:'预览导入结果',exact:true}).click();await expect(page.getByRole('region',{name:'导入预览'})).toContainText('确认导入计划')
   expect((await page.request.get('/api/admin/content').then(r=>r.json())).some((d:Draft)=>d.id===importedId)).toBeFalsy()
   await page.screenshot({path:testInfo.outputPath('data-import-preview.png'),fullPage:true})
-  await page.getByRole('button',{name:'确认执行导入',exact:true}).click();await expect(page.locator('.notice[role="status"]')).toContainText('导入完成：新增 1 项')
+  await page.getByRole('button',{name:'确认执行导入',exact:true}).click();await expect(page.locator('.notice[role="status"]').filter({hasText:'导入完成：新增 1 项'})).toBeVisible()
   expect((await page.request.get('/api/admin/content').then(r=>r.json())).some((d:Draft)=>d.id===importedId)).toBeTruthy()
   const downloadPromise=page.waitForEvent('download');await page.getByRole('link').filter({hasText:'完整 ZIP'}).click();const download=await downloadPromise;expect(download.suggestedFilename()).toBe('xiaojueshi-backup.zip');expect(await download.failure()).toBeNull()
   const w=await state(page);const restored=await page.request.post('/api/admin/settings',{headers,data:{revision:w.revision,settings:original}});expect(restored.ok()).toBeTruthy()
