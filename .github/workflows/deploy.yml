@@ -12,9 +12,11 @@ concurrency:
   cancel-in-progress: false
 jobs:
   deploy:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: |
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
     runs-on: ubuntu-latest
-    environment: production
+    environment: Production
     steps:
       - uses: actions/checkout@v4
         with:
@@ -22,17 +24,13 @@ jobs:
       - uses: jdx/mise-action@v2
       - run: pnpm install --frozen-lockfile
       - name: 检查部署凭据
-        id: credentials
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
-          if [ -n "$CLOUDFLARE_API_TOKEN" ]; then
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "::notice::未配置 CLOUDFLARE_API_TOKEN；本次跳过自动部署，参见 docs/DEPLOYMENT.md"
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::未配置 CLOUDFLARE_API_TOKEN；请在仓库 Actions Secret 或 Production 环境中配置后重试。"
+            exit 1
           fi
-      - if: steps.credentials.outputs.enabled == 'true'
-        run: pnpm deploy:cloudflare
+      - run: pnpm deploy:cloudflare
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

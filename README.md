@@ -54,7 +54,9 @@ pnpm preview
 
 开发服务运行期间如需同时构建，可运行 `NUXT_BUILD_DIR=.nuxt-production pnpm build`，避免共用 Nuxt 构建目录。
 
-当前产物运行在 Node.js。浏览器备份恢复测试已实际运行生产产物；Cloudflare 可运行 `pnpm deploy:cloudflare`，首次需要 Wrangler 授权；线上管理员初始化、GitHub Actions Secret 和回滚方式见 [部署说明](docs/DEPLOYMENT.md)。
+当前产物运行在 Node.js。浏览器备份恢复测试已实际运行生产产物；生产发布统一使用
+GitHub Actions：推送 `main` 并通过 CI 后自动部署 Cloudflare，禁止先在本机部署。
+线上管理员初始化、Cloudflare Secret 和回滚方式见 [部署说明](docs/DEPLOYMENT.md)。
 
 ## 文档
 
